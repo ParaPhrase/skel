@@ -1,0 +1,3 @@
+-pa ebin
+-sname skel-test
+-setcookie skel-test
