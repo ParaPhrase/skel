@@ -1,6 +1,7 @@
 -module(imb).
 -compile(export_all).
 
+% This file has vanished, breaking all the things
 -include("imb.hrl").
 
 run(Benchmark) ->
