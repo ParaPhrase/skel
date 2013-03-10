@@ -29,11 +29,12 @@
 
 -type workflow()  :: [wf_item(),...].
 -type wf_item()   :: {seq,      worker_fun()}
+                   | {pipe,     workflow()}
                    | {ord,      workflow()}
                    | {farm,     workflow(), pos_integer()}
                    | {decomp,   workflow(), decomp_fun(), recomp_fun()}
                    | {map,      workflow(), decomp_fun(), recomp_fun()}
-                   | {reduce,   decomp_fun(), reduce_fun()}
+                   | {reduce,   reduce_fun(), decomp_fun()}
                    | {feedback, workflow(), filter_fun()}.
 
 -type worker_fun()  :: fun((any())        -> any()).

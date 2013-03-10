@@ -41,8 +41,12 @@ compose(BC, AB) -> fun(X) -> BC(AB(X)) end.
 id(X) -> X.
 
 -spec parse(skel:wf_item()) -> fun().
+parse(Fun) when is_function(Fun, 1) ->
+  parse({seq, Fun});
 parse({seq, Fun}) when is_function(Fun, 1) ->
   Fun;
+parse({pipe, WorkFlow}) ->
+  make(WorkFlow);
 parse({ord, WorkFlow}) ->
   make(WorkFlow);
 parse({farm, WorkFlow, _}) ->

@@ -37,8 +37,12 @@ run(WorkFlow, Input) when is_list(WorkFlow) ->
   run(AssembledWF, Input).
 
 -spec parse(skel:wf_item()) -> skel:maker_fun().
+parse(Fun) when is_function(Fun, 1) ->
+  parse({seq, Fun});
 parse({seq, Fun}) when is_function(Fun, 1) ->
   sk_seq:make(Fun);
+parse({pipe, WorkFlow}) ->
+  sk_pipe:make(WorkFlow);
 parse({ord, WorkFlow}) ->
   sk_ord:make(WorkFlow);
 parse({farm, WorkFlow, NWorkers}) ->
