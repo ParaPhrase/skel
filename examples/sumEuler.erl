@@ -18,10 +18,7 @@ sumEuler(N) -> lists:sum(lists:map(fun ?MODULE:euler/1,mkList(N))).
 
 mapEuler(List) -> lists:map(fun ?MODULE:sumEuler/1, List).
 
-parSumEuler(N) -> skel:run([{farm, [{seq, fun ?MODULE:euler/1}], 10}], mkList(N)),
-		  receive
-                    {sink_results, Results} -> Results
-                  end.
+parSumEuler(N) -> skel:do([{farm, [{seq, fun ?MODULE:euler/1}], 10}], mkList(N)).
 
 run_examples(X, Y) ->
   erlang:system_flag(schedulers_online, X),

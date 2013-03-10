@@ -10,6 +10,7 @@
 
 -export([
          run/2
+        ,do/2
         ]).
 
 -export_type([
@@ -67,4 +68,11 @@
 -spec run(workflow(), input()) -> pid().
 run(WorkFlow, Input) ->
   sk_assembler:run(WorkFlow, Input).
+  
+-spec do(workflow(), list()) -> list().
+do(WorkFlow, Input) ->
+  run(WorkFlow, Input),
+  receive
+    {sink_results, Results} -> Results
+  end.
 

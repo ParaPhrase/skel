@@ -45,19 +45,10 @@ example1(Images) ->
   [f(p(Im)) || Im <- Images].
 
 example2(Images) ->
-  skel:run([{seq, fun ?MODULE:p/1}, {seq, fun ?MODULE:f/1}], Images),
-  receive
-    {sink_results, Results} -> Results
-  end.
+  skel:run([{seq, fun ?MODULE:p/1}, {seq, fun ?MODULE:f/1}], Images).
 
 example3(Images) ->
-  skel:run([{seq, fun ?MODULE:p/1}, {map, [{seq, fun ?MODULE:f_prime/1}], fun ?MODULE:decomp/1, fun ?MODULE:recomp/1}], Images),
-  receive
-    {sink_results, Results} -> Results
-  end.
+  skel:do([{seq, fun ?MODULE:p/1}, {map, [{seq, fun ?MODULE:f_prime/1}], fun ?MODULE:decomp/1, fun ?MODULE:recomp/1}], Images).
 
 example4(Images) ->
-  skel:run([{farm, [{seq, fun ?MODULE:p/1}], 4}, {map, [{seq, fun ?MODULE:f_prime/1}], fun ?MODULE:decomp/1, fun ?MODULE:recomp/1}], Images),
-  receive
-    {sink_results, Results} -> Results
-  end.
+  skel:run([{farm, [{seq, fun ?MODULE:p/1}], 4}, {map, [{seq, fun ?MODULE:f_prime/1}], fun ?MODULE:decomp/1, fun ?MODULE:recomp/1}], Images).

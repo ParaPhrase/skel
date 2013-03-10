@@ -33,8 +33,4 @@ sequential(Inputs) ->
   [sk_reduce:fold1(fun ?MODULE:reduce/2, Input) || Input <- Inputs ].
 
 parallel(Inputs) ->
-  skel:run([{reduce, fun ?MODULE:reduce/2, fun ?MODULE:id/1}], Inputs),
-  receive
-    {sink_results, List} ->
-      List
-  end.
+  skel:do([{reduce, fun ?MODULE:reduce/2, fun ?MODULE:id/1}], Inputs).
