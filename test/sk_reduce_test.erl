@@ -1,16 +1,10 @@
 -module(sk_reduce_test).
 -include_lib("eunit/include/eunit.hrl").
 
+-include("sk_test_utils.hrl").
+
 -compile(export_all).
 
--define( assertSameDataInside( Expected, Given),
-         lists:map( fun(Element) -> ?is_in(Element, Given) end,
-                    Expected)).
-
--define ( is_in( Element, List), 
-          ?assert(lists:any( fun(Any) -> Any =:= Element end,
-                             List))).
-    
 
 macro_same_data_differen_order_test() ->
     ?assertSameDataInside( [ a,b,c,d ],
