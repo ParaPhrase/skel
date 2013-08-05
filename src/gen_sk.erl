@@ -11,8 +11,6 @@
 %%%----------------------------------------------------------------------------
 -module(gen_sk).
 
--include("skel.hrl").
-
 -ifdef(TEST).
 -compile(export_all).
 -endif.

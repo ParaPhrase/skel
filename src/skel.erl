@@ -26,7 +26,6 @@
              ,data_decomp_fun/0 ,data_recomp_fun/0 ,data_reduce_fun/0 ,data_filter_fun/0
              ]).
 
--include("skel.hrl").
 
 -type workflow()  :: [wf_item(),...].
 -type wf_item()   :: {seq,      worker_fun()}

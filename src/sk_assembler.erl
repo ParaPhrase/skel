@@ -13,8 +13,6 @@
         ,run/2
         ]).
 
--include("skel.hrl").
-
 -ifdef(TEST).
 -compile(export_all).
 -endif.
