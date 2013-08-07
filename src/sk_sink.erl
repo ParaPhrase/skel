@@ -17,6 +17,7 @@
          make/0
         ,start_acc/1
         ,make/1
+        ,make/2
         ,start_mod/2
         ]).
 
@@ -43,9 +44,13 @@ make() ->
 
 -spec make(module()) -> skel:maker_fun().
 make(OutputMod) ->
-  fun(Pid) ->
-    spawn(?MODULE, start_mod, [OutputMod, Pid])
-  end.
+    spawn(?MODULE, start_mod, [OutputMod, self()]).
+
+-spec make(module(), pid()) -> skel:maker_fun().
+make(OutputMod, Pid) ->
+    spawn(?MODULE, start_mod, [OutputMod, Pid]).
+
+
 
 -spec start_acc(pid()) -> 'eos'.
 start_acc(NextPid) ->
