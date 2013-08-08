@@ -30,7 +30,7 @@ bm(NSchedulers, Fn, NInputs, PartsPerInput, NTimes) ->
   Results.
 
 sequential(Inputs) ->
-  [sk_reduce:fold1(fun ?MODULE:reduce/2, Input) || Input <- Inputs ].
+  [lists:fold1(fun ?MODULE:reduce/2, Input) || Input <- Inputs ].
 
 parallel(Inputs) ->
   skel:do([{reduce, fun ?MODULE:reduce/2, fun ?MODULE:id/1}], Inputs).
