@@ -36,19 +36,18 @@
 -callback terminate(State :: term()) ->
     term().
 
--spec make() -> skel:maker_fun().
+-spec make() -> pid().
 make() ->
-  fun(Pid) ->
-    spawn(?MODULE, start_acc, [Pid])
-  end.
+  spawn(?MODULE, start_acc, [ self() ]).
 
--spec make(module()) -> skel:maker_fun().
+
+-spec make(module()) -> pid().
 make(OutputMod) ->
-    spawn(?MODULE, start_mod, [OutputMod, self()]).
+  make( OutputMod, self()).
 
--spec make(module(), pid()) -> skel:maker_fun().
+-spec make(module(), pid()) -> pid().
 make(OutputMod, Pid) ->
-    spawn(?MODULE, start_mod, [OutputMod, Pid]).
+  spawn(?MODULE, start_mod, [OutputMod, Pid]).
 
 
 

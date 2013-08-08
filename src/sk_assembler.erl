@@ -27,15 +27,14 @@ make(WorkFlow, EndPid) when is_pid(EndPid) ->
   MakeFns = [parse(Section) || Section <- WorkFlow],
   lists:foldr(fun(MakeFn, Pid) -> MakeFn(Pid) end, EndPid, MakeFns).
 
+
 -spec run(pid() | skel:workflow(), skel:input()) -> pid().
+run (WorkFlow, Input) when is_pid(WorkFlow) ->
+  sk_source:make(Input, WorkFlow);
 run (WorkFlow, Input) when is_list(WorkFlow) ->
   DrainPid = sk_sink:make(),
   AssembledWF = make(WorkFlow, DrainPid),
-  run(AssembledWF, Input);
-run (WorkFlow, Input) when is_pid(WorkFlow) ->
-  Feeder = sk_source:make(Input),
-  Feeder(WorkFlow).
-
+  run(AssembledWF, Input).
 
 -spec parse(skel:wf_item()) -> skel:maker_fun().
 parse(Fun) when is_function(Fun, 1) ->

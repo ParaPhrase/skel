@@ -14,7 +14,7 @@
 -module(sk_source).
 
 -export([
-         make/1
+         make/2
         ,start/2
         ]).
 
@@ -36,11 +36,10 @@
 -callback terminate(State :: term()) ->
     ok.
 
--spec make(skel:input()) -> skel:maker_fun().
-make(Input) ->
-  fun(Pid) ->
-    spawn(?MODULE, start, [Input, Pid])
-  end.
+-spec make(skel:input(), pid()) -> pid().
+make(Input, Pid) ->
+  spawn(?MODULE, start, [Input, Pid]).
+
 
 -spec start(skel:input(), pid()) -> 'eos'.
 start(Input, NextPid) when is_list(Input) ->
