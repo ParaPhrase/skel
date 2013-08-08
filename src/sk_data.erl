@@ -25,8 +25,6 @@
         ,filter_with/1
         ]).
 
--include("skel.hrl").
-
 -ifdef(TEST).
 -compile(export_all).
 -endif.

@@ -16,8 +16,6 @@
          make/3
         ]).
 
--include("skel.hrl").
-
 -ifdef(TEST).
 -compile(export_all).
 -endif.

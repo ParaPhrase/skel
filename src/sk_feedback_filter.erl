@@ -17,8 +17,6 @@
          start/4
         ]).
 
--include("skel.hrl").
-
 -define(counter, sk_feedback_bicounter).
 
 -ifdef(TEST).
