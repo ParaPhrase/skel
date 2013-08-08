@@ -21,18 +21,18 @@
 
 -spec make(skel:workflow(), pid() | module()) -> pid().
 make(WorkFlow, EndModule) when is_atom(EndModule) ->
-  DrainPid = (sk_sink:make(EndModule))(self()),
+  DrainPid = sk_sink:make(EndModule),
   make(WorkFlow, DrainPid);
 make(WorkFlow, EndPid) when is_pid(EndPid) ->
   MakeFns = [parse(Section) || Section <- WorkFlow],
   lists:foldr(fun(MakeFn, Pid) -> MakeFn(Pid) end, EndPid, MakeFns).
 
+
 -spec run(pid() | skel:workflow(), skel:input()) -> pid().
-run(WorkFlow, Input) when is_pid(WorkFlow) ->
-  Feeder = sk_source:make(Input),
-  Feeder(WorkFlow);
-run(WorkFlow, Input) when is_list(WorkFlow) ->
-  DrainPid = (sk_sink:make())(self()),
+run (WorkFlow, Input) when is_pid(WorkFlow) ->
+  sk_source:make(Input, WorkFlow);
+run (WorkFlow, Input) when is_list(WorkFlow) ->
+  DrainPid = sk_sink:make(),
   AssembledWF = make(WorkFlow, DrainPid),
   run(AssembledWF, Input).
 
