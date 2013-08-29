@@ -21,7 +21,8 @@
 -endif.
 
 -spec make(skel:workflow(), skel:decomp_fun(), skel:recomp_fun()) -> fun((pid()) -> pid()).
-make(WorkFlow, Decomp, Recomp) ->
+make(WorkFlow, Decomp, Recomp) when is_function( Decomp, 1 ),
+                                    is_function( Recomp, 1)->
   fun(NextPid) ->
     CombinerPid = spawn(sk_map_combiner, start, [Recomp, NextPid]),
     % We don't start workers until we know how many partitions we need.
