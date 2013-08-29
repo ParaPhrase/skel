@@ -13,12 +13,18 @@
 -module(sk_map).
 
 -export([
-         make/3
+         make/2
         ]).
 
 -ifdef(TEST).
 -compile(export_all).
 -endif.
+
+-spec make(skel:workflow(), list()) -> skel:maker_fun().
+make(WorkFlow,
+     [{decomp, Decomp}, {recomp, Recomp}]) ->
+  make ( WorkFlow, Decomp, Recomp ).
+
 
 -spec make(skel:workflow(), skel:decomp_fun(), skel:recomp_fun()) -> fun((pid()) -> pid()).
 make(WorkFlow, Decomp, Recomp) when is_function( Decomp, 1 ),
