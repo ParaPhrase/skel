@@ -23,13 +23,13 @@
 -endif.
 
 
--spec make(skel:workflow(), list()) -> fun((pid()) -> pid()).
+-spec make(skel:workflow(), list()) -> skel:maker_fun().
 make(WorkFlow,
      [{decomp, Decomp}, {recomp, Recomp}]) ->
   make ( WorkFlow, Decomp, Recomp ).
 
-
-
+-spec make( skel:workfow(), skel:decomp_fun(), skel:recomp_fun())
+          -> skel:maker_fun().
 make( WorkFlow, Decomp, Recomp ) when is_function(Decomp, 1),
                                       is_function(Recomp, 1) ->
   fun(NextPid) ->
