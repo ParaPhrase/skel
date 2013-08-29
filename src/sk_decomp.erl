@@ -23,7 +23,8 @@
 -endif.
 
 -spec make(skel:workflow(), skel:decomp_fun(), skel:recomp_fun()) -> fun((pid()) -> pid()).
-make(WorkFlow, Decomp, Recomp) ->
+make(WorkFlow, Decomp, Recomp) when is_function(Decomp, 1),
+                                    is_function(Recomp, 1) ->
   fun(NextPid) ->
     RecompPid = spawn(sk_decomp_recomp, start, [Recomp, NextPid]),
     WorkerPid = sk_utils:start_worker(WorkFlow, RecompPid),

@@ -48,11 +48,12 @@ parse({ord, WorkFlow, []}) ->
   sk_ord:make(WorkFlow);
 parse({farm, WorkFlow, NWorkers}) ->
   sk_farm:make(NWorkers, WorkFlow);
+
 parse({decomp, WorkFlow, Decomp, Recomp}) when is_function(Decomp, 1),
                                                is_function(Recomp, 1) ->
   sk_decomp:make(WorkFlow, Decomp, Recomp);
-parse({map, WorkFlow, Decomp, Recomp}) when is_function(Decomp, 1),
-                                            is_function(Recomp, 1) ->
+
+parse({map, WorkFlow, Decomp, Recomp}) ->
   sk_map:make(WorkFlow, Decomp, Recomp);
 parse({reduce, Reduce, Decomp}) when is_function(Reduce, 2),
                                      is_function(Decomp, 1) ->
