@@ -40,8 +40,8 @@ parse(Fun) when is_function(Fun, 1) ->
 parse({ Name, Workflow}) ->
   parse( { Name, Workflow, _EmptyProplist = []});
 
-parse({seq, Fun, []})  ->
-  sk_seq:make(Fun);
+parse({seq, Fun, Proplist})  ->
+  sk_seq:make(Fun, Proplist);
 parse({pipe, WorkFlow, []}) ->
   sk_pipe:make(WorkFlow);
 parse({ord, WorkFlow, []}) ->
