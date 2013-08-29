@@ -22,8 +22,9 @@
 -compile(export_all).
 -endif.
 
+  
 -spec make(skel:worker_fun())  -> skel:maker_fun().
-make(WorkerFun) ->
+make(WorkerFun) when is_function(WorkerFun, 1) ->
   fun(NextPid) ->
     spawn(?MODULE, start, [WorkerFun, NextPid])
   end.
