@@ -6,12 +6,6 @@
 -compile(export_all).
 
 
-macro_same_data_differen_order_test() ->
-    ?assertSameDataInside( [ a,b,c,d ],
-                           [ c,b,a,d ]).
-
-
-
 
 example_reduce_run_test() ->
     ?assertSameDataInside([ 3,
