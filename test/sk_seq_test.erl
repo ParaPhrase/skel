@@ -7,8 +7,14 @@
 
 simple_sequance_example_test() ->
     ?assertEqual( [ 1,4,9,16,25 ],
-                skel:do([{seq , fun(X) -> X*X end}],
-                        [1,2,3,4,5])).
+                  skel:do([{seq , fun(X) -> X*X end}],
+                          [1,2,3,4,5])).
+
+seq_skel_might_be_colled_with_additional_prop_list_test() ->
+    ?assertEqual( [ 1,4,9,16,25 ],
+                  skel:do([{seq , fun(X) -> X*X end, _PropList = []}],
+                          [1,2,3,4,5])).
+
 
 seq_tuple_can_be_ommited_with_same_effect_test() ->
     ?assertEqual( skel:do([ fun(X) -> X*X end],

@@ -37,11 +37,14 @@ run (WorkFlow, Input) when is_list(WorkFlow) ->
 -spec parse(skel:wf_item()) -> skel:maker_fun().
 parse(Fun) when is_function(Fun, 1) ->
   parse({seq, Fun});
-parse({seq, Fun}) when is_function(Fun, 1) ->
+parse({ Name, Workflow}) ->
+  parse( { Name, Workflow, _EmptyProplist = []});
+
+parse({seq, Fun, []}) when is_function(Fun, 1) ->
   sk_seq:make(Fun);
-parse({pipe, WorkFlow}) ->
+parse({pipe, WorkFlow, []}) ->
   sk_pipe:make(WorkFlow);
-parse({ord, WorkFlow}) ->
+parse({ord, WorkFlow, []}) ->
   sk_ord:make(WorkFlow);
 parse({farm, WorkFlow, NWorkers}) ->
   sk_farm:make(NWorkers, WorkFlow);
