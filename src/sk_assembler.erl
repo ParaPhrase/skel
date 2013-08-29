@@ -52,8 +52,7 @@ parse({decomp, WorkFlow, Proplist}) ->
   sk_decomp:make(WorkFlow, Proplist);
 parse({map, WorkFlow, Proplist }) ->
   sk_map:make(WorkFlow, Proplist);
-parse({reduce, Reduce, Decomp}) when is_function(Reduce, 2),
-                                     is_function(Decomp, 1) ->
+parse({reduce, Reduce, Decomp}) ->
   sk_reduce:make(Decomp, Reduce);
 parse({feedback, WorkFlow, Filter}) when is_function(Filter, 1) ->
   sk_feedback:make(WorkFlow, Filter).

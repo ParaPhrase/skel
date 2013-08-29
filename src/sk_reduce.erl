@@ -20,7 +20,8 @@
 -endif.
 
 -spec make(skel:decomp_fun(), skel:reduce_fun()) -> fun((pid()) -> pid()).
-make(Decomp, Reduce) ->
+make(Decomp, Reduce) when is_function(Reduce, 2),
+                          is_function(Decomp, 1) ->
   fun(NextPid) ->
     % We don't start workers until we know how many partitions we have.
     spawn(sk_reduce_decomp, start, [Decomp, Reduce, NextPid])
