@@ -42,8 +42,8 @@ parse({ Name, Workflow}) ->
 
 parse({seq, Fun, Proplist})  ->
   sk_seq:make(Fun, Proplist);
-parse({pipe, WorkFlow, []}) ->
-  sk_pipe:make(WorkFlow);
+parse({pipe, WorkFlow, Proplist}) ->
+  sk_pipe:make(WorkFlow, Proplist);
 parse({ord, WorkFlow, []}) ->
   sk_ord:make(WorkFlow);
 parse({farm, WorkFlow, NWorkers}) ->

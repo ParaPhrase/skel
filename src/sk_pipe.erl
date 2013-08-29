@@ -10,13 +10,18 @@
 -module(sk_pipe).
 
 -export([
-         make/1
+         make/2
         ]).
 
 
 -ifdef(TEST).
 -compile(export_all).
 -endif.
+
+
+-spec make(skel:worker_fun(), list() ) -> skel:maker_fun().
+make( WorkerFun, [] ) ->
+  make( WorkerFun ).
 
 -spec make(skel:workflow()) -> skel:maker_fun().
 make(WorkFlow) ->
