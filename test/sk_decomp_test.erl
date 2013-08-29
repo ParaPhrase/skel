@@ -11,8 +11,8 @@ simple_example_of_decomp_usage_test()->
                              {9,12,15} ],
                            skel:do( [{ decomp,
                                        [ fun (X) -> X*3 end],
-                                       fun erlang:tuple_to_list/1,
-                                       fun erlang:list_to_tuple/1}] ,
+                                       [{decomp, fun erlang:tuple_to_list/1},
+                                        {recomp, fun erlang:list_to_tuple/1}] }] ,
                                     [ {0,1,2},
                                       {3,4,5} ] )).
 
