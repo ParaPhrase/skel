@@ -1,9 +1,10 @@
 -module(sk_map_test).
 
-
 -include_lib("eunit/include/eunit.hrl").
 -include("sk_test_utils.hrl").
 -compile(export_all).
+
+
 
 
 simple_example_of_map_usage_test()->
@@ -15,7 +16,5 @@ simple_example_of_map_usage_test()->
                                          { recomp, fun erlang:list_to_tuple/1}] }] ,
                                     [ {0,1,2},
                                       {3,4,5} ] )).
-
-
 
 

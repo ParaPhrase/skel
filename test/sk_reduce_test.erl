@@ -7,14 +7,24 @@
 
 
 
+example_reduce_run_old_test() ->
+    ?assertSameDataInside([ 3,
+                            7,
+                            11],
+                          skel:do([{reduce,  
+                                    _ReduceFun = fun(X,Y) -> X+Y end ,
+                                    _DecompositionFun = fun erlang:tuple_to_list/1}],
+                                  [ {1,2},
+                                    {3,4},
+                                    {5,6}])).
+
 example_reduce_run_test() ->
     ?assertSameDataInside([ 3,
                             7,
                             11],
-                          skel:do([{reduce, 
-                                    _ReduceFun = fun(X,Y) -> X+Y end ,
-                                    _DecompositionFun = fun erlang:tuple_to_list/1}],
-                                  [ { 1,2},
+                          skel:do([{reduce, [ {reduce, fun(X,Y) -> X+Y end} ,
+                                              {decomp, fun erlang:tuple_to_list/1}]}],
+                                  [ {1,2},
                                     {3,4},
                                     {5,6}])).
 
