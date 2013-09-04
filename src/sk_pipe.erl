@@ -10,7 +10,7 @@
 -module(sk_pipe).
 
 -export([
-         make/2
+         make/1
         ]).
 
 
@@ -19,11 +19,10 @@
 -endif.
 
 
--spec make(skel:worker_fun(), list() ) -> skel:maker_fun().
-make( WorkerFun, [] ) ->
-  make( WorkerFun ).
-
--spec make(skel:workflow()) -> skel:maker_fun().
+-spec make(skel) -> skel:maker_fun().
+make( _Proplist = [ {do, WorkFlow }] ) ->
+  make( WorkFlow  );
+  
 make(WorkFlow) ->
   fun(NextPid) ->
     sk_assembler:make(WorkFlow, NextPid)

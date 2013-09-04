@@ -14,7 +14,7 @@
 
 -export([
          start/2
-        ,make/2
+        ,make/1
         ]).
 
 
@@ -23,10 +23,6 @@
 -endif.
 
 
-
--spec make(skel:worker_fun(), list() ) -> skel:maker_fun().
-make( WorkerFun, [] ) ->
-  make( WorkerFun ).
   
 -spec make(skel:worker_fun())  -> skel:maker_fun().
 make(WorkerFun) when is_function(WorkerFun, 1) ->
