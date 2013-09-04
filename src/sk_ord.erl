@@ -14,7 +14,7 @@
 -module(sk_ord).
 
 -export([
-         make/2
+         make/1
         ]).
 
 
@@ -24,13 +24,13 @@
 
 
 
--spec make(skel:worker_fun(), list() ) -> skel:maker_fun().
-make( WorkerFun, [] ) ->
-  make( WorkerFun ).
+-spec make( list() ) -> skel:maker_fun().
+make( Proplist ) ->
+  local_make( proplists:get_value( do, Proplist) ).
 
 
--spec make(skel:workflow()) -> skel:maker_fun().
-make(WorkFlow) ->
+-spec local_make(skel:workflow()) -> skel:maker_fun().
+local_make(WorkFlow) ->
   fun(NextPid) ->
     ReordererPid = spawn(sk_ord_reorderer, start, [NextPid]),
     WorkerPid = sk_utils:start_worker(WorkFlow, ReordererPid),
