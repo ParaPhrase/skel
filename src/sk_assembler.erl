@@ -48,8 +48,8 @@ parse({farm, WorkFlow, NWorkers}) ->
   sk_farm:make(NWorkers, WorkFlow);
 parse({decomp, Proplist}) ->
   sk_decomp:make( Proplist);
-parse({map, WorkFlow, Proplist }) ->
-  sk_map:make(WorkFlow, Proplist);
+parse({map, Proplist }) ->
+  sk_map:make( Proplist);
 parse({reduce, Reduce, Decomp}) ->
   sk_reduce:make(Reduce, Decomp);
 parse({feedback, WorkFlow, Filter}) when is_function(Filter, 1) ->

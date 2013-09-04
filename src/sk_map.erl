@@ -13,17 +13,18 @@
 -module(sk_map).
 
 -export([
-         make/2
+         make/1
         ]).
 
 -ifdef(TEST).
 -compile(export_all).
 -endif.
 
--spec make(skel:workflow(), list()) -> skel:maker_fun().
-make(WorkFlow,
-     [{decomp, Decomp}, {recomp, Recomp}]) ->
-  make ( WorkFlow, Decomp, Recomp ).
+-spec make(list()) -> skel:maker_fun().
+make(Proplist) ->
+  make ( _Workflow = proplists:get_value( do, Proplist),
+         _Decomp = proplists:get_value( decomp, Proplist),
+         _Recomp = proplists:get_value( recomp, Proplist)).
 
 
 -spec make(skel:workflow(), skel:decomp_fun(), skel:recomp_fun()) -> fun((pid()) -> pid()).
