@@ -44,8 +44,8 @@ parse({pipe, Proplist}) ->
   sk_pipe:make( Proplist);
 parse({ord, Proplist}) ->
   sk_ord:make(Proplist);
-parse({farm, WorkFlow, NWorkers}) ->
-  sk_farm:make(NWorkers, WorkFlow);
+parse({farm, Proplist}) ->
+  sk_farm:make(Proplist);
 parse({decomp, Proplist}) ->
   sk_decomp:make( Proplist);
 parse({map, Proplist }) ->
