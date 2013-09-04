@@ -10,7 +10,7 @@
 -module(sk_reduce).
 
 -export([
-         make/2
+         make/1
         ,fold1/2
         ]).
 
@@ -19,7 +19,12 @@
 -compile(export_all).
 -endif.
 
--spec make(skel:decomp_fun(), skel:reduce_fun()) -> fun((pid()) -> pid()).
+-spec make( list() ) -> skel:maker_fun().
+make(Proplist) ->
+  make ( _Reduce = proplists:get_value( reduce, Proplist),
+         _Decomp = proplists:get_value( decomp, Proplist)).
+
+-spec make(skel:decomp_fun(), skel:reduce_fun()) -> skel:maker_fun().
 make(Reduce, Decomp) when is_function(Reduce, 2),
                           is_function(Decomp, 1) ->
   fun(NextPid) ->
@@ -28,13 +33,15 @@ make(Reduce, Decomp) when is_function(Reduce, 2),
   end.
 
 % Implemented as a treefold underneath
--spec fold1(fun((A, A) -> A), [A,...]) -> A when A :: term().
+-spec fold1(fun((A, A) -> A), [A,...]) -> A when
+    A :: term().
 fold1(_ReduceFun, [L1]) ->
   L1;
 fold1(ReduceFun, [L1, L2 | List]) ->
   fold1(ReduceFun, [ReduceFun(L1, L2) | pairs(ReduceFun, List)]).
 
--spec pairs(fun((A, A) -> A), [A]) -> [A] when A :: term().
+-spec pairs(fun((A, A) -> A), [A]) -> [A] when
+    A :: term().
 pairs(Fun, [L1,L2|List]) ->
   [Fun(L1,L2) | pairs(Fun, List)];
 pairs(_Fun, List) ->
