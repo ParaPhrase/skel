@@ -12,19 +12,25 @@
 -module(sk_feedback).
 
 -export([
-         make/2
+         make/1
         ]).
 
 -ifdef(TEST).
 -compile(export_all).
 -endif.
 
+-spec make( list() ) -> skel:maker_fun().
+make(Proplist) ->
+  make ( _WorkFlow = proplists:get_value( do, Proplist),
+         _Filter = proplists:get_value( while, Proplist)).
+
+
 -spec make(skel:workflow(), skel:filter_fun()) -> skel:maker_fun().
-make(WorkFlow, FilterFun) ->
+make(WorkFlow, Filter) when is_function(Filter, 1) ->
   fun(NextPid) ->
     Ref = make_ref(),
     CounterPid = spawn(sk_feedback_bicounter, start, []),
-    FilterPid = spawn(sk_feedback_filter, start, [FilterFun, Ref, CounterPid, NextPid]),
+    FilterPid = spawn(sk_feedback_filter, start, [Filter, Ref, CounterPid, NextPid]),
     WorkerPid = sk_utils:start_worker(WorkFlow, FilterPid),
     spawn(sk_feedback_receiver, start, [Ref, CounterPid, FilterPid, WorkerPid])
   end.
