@@ -38,21 +38,16 @@ run (WorkFlow, Input) when is_list(WorkFlow) ->
 parse(Fun) when is_function(Fun, 1) ->
   parse({seq, Fun});
 
-parse({seq, Fun})  ->
-  sk_seq:make( Fun);
-parse({pipe, Proplist}) ->
-  sk_pipe:make( Proplist);
-parse({ord, Proplist}) ->
-  sk_ord:make(Proplist);
-parse({farm, Proplist}) ->
-  sk_farm:make(Proplist);
-parse({decomp, Proplist}) ->
-  sk_decomp:make( Proplist);
-parse({map, Proplist }) ->
-  sk_map:make( Proplist);
-parse({reduce, Proplist}) ->
-  sk_reduce:make(Proplist);
-parse({feedback, Proplist})  ->
-  sk_feedback:make(Proplist).
+parse({Workflow, Proplist}) ->
+  case Workflow of
+    seq       -> sk_seq:make( Proplist);
+    pipe      -> sk_pipe:make( Proplist);
+    ord       -> sk_ord:make( Proplist);
+    farm      -> sk_farm:make( Proplist);
+    decomp    -> sk_decomp:make( Proplist);
+    map       -> sk_map:make( Proplist);
+    reduce    -> sk_reduce:make( Proplist);
+    feedback  -> sk_feedback:make( Proplist)
+  end.
 
 
