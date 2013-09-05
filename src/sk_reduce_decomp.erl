@@ -25,7 +25,7 @@
 % We keep references to all of them, because of the complex dispatch rules.
 -type pid_pools() :: dict().
 
--spec start(skel:decomp_fun(), skel:reduce_fun(), pid()) -> eos.
+-spec start(skel:decomp_fun(), sk_reduce:reduce_fun(), pid()) -> eos.
 start(Decomp, Reduce, NextPid) ->
   sk_tracer:t(75, self(), {?MODULE, start}, [{next_pid, NextPid}]),
   DataDecompFun = sk_data:decomp_by(Decomp),

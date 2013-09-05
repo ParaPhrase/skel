@@ -22,6 +22,9 @@
 -compile(export_all).
 -endif.
 
+-export_type([ workflow/0 ]).
+
+-type workflow() :: { seq, skel:worker_fun()}.
 
   
 -spec make(skel:worker_fun())  -> skel:maker_fun().

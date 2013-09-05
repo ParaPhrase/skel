@@ -19,12 +19,25 @@
 -compile(export_all).
 -endif.
 
--spec make( list() ) -> skel:maker_fun().
+
+-export_type([ workflow/0,
+               reduce_fun/0]).
+
+-type workflow() :: { reduce, [ property(), ...]}.
+-type property() :: { reduce, reduce_fun() } |
+                     { decomp, skel:decomp_fun() }.
+
+-type reduce_fun()  :: fun((any(), any()) -> any()).
+
+
+
+
+-spec make( [ property(), ... ] ) -> skel:maker_fun().
 make(Proplist) ->
   make ( _Reduce = proplists:get_value( reduce, Proplist),
          _Decomp = proplists:get_value( decomp, Proplist)).
 
--spec make(skel:reduce_fun(), skel:decomp_fun()) -> skel:maker_fun().
+-spec make( reduce_fun(), skel:decomp_fun()) -> skel:maker_fun().
 make(Reduce, Decomp) when is_function(Reduce, 2),
                           is_function(Decomp, 1) ->
   fun(NextPid) ->

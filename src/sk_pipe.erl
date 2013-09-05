@@ -18,8 +18,14 @@
 -compile(export_all).
 -endif.
 
+-export_type([ workflow/0 ]).
 
--spec make(skel) -> skel:maker_fun().
+-type workflow() :: { pipe, [ propertiy(), ...]}.
+-type propertiy() :: { do, skel:workflow() }.
+
+
+
+-spec make( [propertiy(), ... ] ) -> skel:maker_fun().
 make( _Proplist = [ {do, WorkFlow }] ) ->
   make( WorkFlow  );
   

@@ -18,7 +18,14 @@
 -compile(export_all).
 -endif.
 
--spec make( list() ) -> skel:maker_fun().
+-export_type([ workflow/0 ]).
+
+-type workflow() :: { farm, [ propertiy(), ...]}.
+-type propertiy() :: { do, skel:workflow() } |
+                     { workers, pos_integer()}.
+
+
+-spec make( [ propertiy(), ...] ) -> skel:maker_fun().
 make(Proplist) ->
   make ( _Workflow = proplists:get_value( do, Proplist),
          _NumWorkers = proplists:get_value( workers, Proplist)).

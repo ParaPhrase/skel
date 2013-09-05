@@ -22,9 +22,14 @@
 -compile(export_all).
 -endif.
 
+-export_type([ workflow/0 ]).
+
+-type workflow() :: { ord, [ propertiy(), ...]}.
+-type propertiy() :: { do, skel:workflow() }.
 
 
--spec make( list() ) -> skel:maker_fun().
+
+-spec make( [ propertiy(), ... ] ) -> skel:maker_fun().
 make( Proplist ) ->
   local_make( proplists:get_value( do, Proplist) ).
 

@@ -22,8 +22,15 @@
 -compile(export_all).
 -endif.
 
+-export_type([ workflow/0 ]).
 
--spec make( list()) -> skel:maker_fun().
+-type workflow() :: { decomp, [ propertiy(), ...]}.
+-type propertiy() :: { do, skel:workflow() } |
+                     { decomp, skel:decomp_fun() } |
+                     { recomp, skel:recomp_fun() }.
+
+
+-spec make( [ propertiy(), ... ] ) -> skel:maker_fun().
 make(Proplist) ->
   make ( _Workflow = proplists:get_value( do, Proplist),
          _Decomp = proplists:get_value( decomp, Proplist),

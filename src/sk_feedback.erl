@@ -19,13 +19,25 @@
 -compile(export_all).
 -endif.
 
--spec make( list() ) -> skel:maker_fun().
+-export_type([ workflow/0,
+               filter_fun/0]).
+
+-type workflow() :: { feedback, [ propertiy(), ...]}.
+
+-type propertiy() :: { do, skel:workflow() } |
+                     { while, filter_fun() }.
+
+-type filter_fun()  :: fun((any())        -> boolean()).
+
+
+
+-spec make( [propertiy(), ...] ) -> skel:maker_fun().
 make(Proplist) ->
   make ( _WorkFlow = proplists:get_value( do, Proplist),
          _Filter = proplists:get_value( while, Proplist)).
 
 
--spec make(skel:workflow(), skel:filter_fun()) -> skel:maker_fun().
+-spec make(skel:workflow(), filter_fun()) -> skel:maker_fun().
 make(WorkFlow, Filter) when is_function(Filter, 1) ->
   fun(NextPid) ->
     Ref = make_ref(),
