@@ -24,7 +24,7 @@ make(Proplist) ->
   make ( _Reduce = proplists:get_value( reduce, Proplist),
          _Decomp = proplists:get_value( decomp, Proplist)).
 
--spec make(skel:decomp_fun(), skel:reduce_fun()) -> skel:maker_fun().
+-spec make(skel:reduce_fun(), skel:decomp_fun()) -> skel:maker_fun().
 make(Reduce, Decomp) when is_function(Reduce, 2),
                           is_function(Decomp, 1) ->
   fun(NextPid) ->
