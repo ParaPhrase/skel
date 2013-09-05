@@ -29,7 +29,7 @@ make(Proplist) ->
          _Decomp = proplists:get_value( decomp, Proplist),
          _Recomp = proplists:get_value( recomp, Proplist)).
 
--spec make( skel:workfow(), skel:decomp_fun(), skel:recomp_fun())
+-spec make( skel:workflow(), skel:decomp_fun(), skel:recomp_fun())
           -> skel:maker_fun().
 make( WorkFlow, Decomp, Recomp ) when is_function(Decomp, 1),
                                       is_function(Recomp, 1) ->
