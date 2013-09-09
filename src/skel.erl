@@ -16,7 +16,7 @@
 -export_type([
               workflow/0 ,wf_item/0
              ,worker_fun/0
-             ,decomp_fun/0 ,recomp_fun/0 ,reduce_fun/0 ,filter_fun/0
+             ,decomp_fun/0 ,recomp_fun/0
              ,maker_fun/0
              ,input/0
              ,system_message/0
@@ -26,23 +26,25 @@
              ,data_decomp_fun/0 ,data_recomp_fun/0 ,data_reduce_fun/0 ,data_filter_fun/0
              ]).
 
--include("skel.hrl").
 
 -type workflow()  :: [wf_item(),...].
--type wf_item()   :: {seq,      worker_fun()}
-                   | {pipe,     workflow()}
-                   | {ord,      workflow()}
-                   | {farm,     workflow(), pos_integer()}
-                   | {decomp,   workflow(), decomp_fun(), recomp_fun()}
-                   | {map,      workflow(), decomp_fun(), recomp_fun()}
-                   | {reduce,   reduce_fun(), decomp_fun()}
-                   | {feedback, workflow(), filter_fun()}.
+
+
+-type wf_item()   :: worker_fun() |
+                     sk_seq:workflow() |
+                     sk_pipe:workflow() |
+                     sk_ord:workflow() |
+                     sk_farm:workflow() |
+                     sk_decomp:workflow() |
+                     sk_map:workflow() |
+                     sk_reduce:workflow() |
+                     sk_feedback:workflow().
+
+
 
 -type worker_fun()  :: fun((any())        -> any()).
 -type decomp_fun()  :: fun((any())        -> [any(),...]).
 -type recomp_fun()  :: fun(([any(),...])  -> any()).
--type reduce_fun()  :: fun((any(), any()) -> any()).
--type filter_fun()  :: fun((any())        -> boolean()).
 -type maker_fun()   :: fun((pid())        -> pid()).
 
 -type input()       :: list() | module().

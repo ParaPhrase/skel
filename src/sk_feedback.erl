@@ -12,21 +12,37 @@
 -module(sk_feedback).
 
 -export([
-         make/2
+         make/1
         ]).
-
--include("skel.hrl").
 
 -ifdef(TEST).
 -compile(export_all).
 -endif.
 
--spec make(skel:workflow(), skel:filter_fun()) -> skel:maker_fun().
-make(WorkFlow, FilterFun) ->
+-export_type([ workflow/0,
+               filter_fun/0]).
+
+-type workflow() :: { feedback, [ propertiy(), ...]}.
+
+-type propertiy() :: { do, skel:workflow() } |
+                     { while, filter_fun() }.
+
+-type filter_fun()  :: fun((any())        -> boolean()).
+
+
+
+-spec make( [propertiy(), ...] ) -> skel:maker_fun().
+make(Proplist) ->
+  make ( _WorkFlow = proplists:get_value( do, Proplist),
+         _Filter = proplists:get_value( while, Proplist)).
+
+
+-spec make(skel:workflow(), filter_fun()) -> skel:maker_fun().
+make(WorkFlow, Filter) when is_function(Filter, 1) ->
   fun(NextPid) ->
     Ref = make_ref(),
     CounterPid = spawn(sk_feedback_bicounter, start, []),
-    FilterPid = spawn(sk_feedback_filter, start, [FilterFun, Ref, CounterPid, NextPid]),
+    FilterPid = spawn(sk_feedback_filter, start, [Filter, Ref, CounterPid, NextPid]),
     WorkerPid = sk_utils:start_worker(WorkFlow, FilterPid),
     spawn(sk_feedback_receiver, start, [Ref, CounterPid, FilterPid, WorkerPid])
   end.

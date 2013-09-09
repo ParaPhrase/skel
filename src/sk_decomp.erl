@@ -15,17 +15,31 @@
 -module(sk_decomp).
 
 -export([
-         make/3
+         make/1
         ]).
-
--include("skel.hrl").
 
 -ifdef(TEST).
 -compile(export_all).
 -endif.
 
--spec make(skel:workflow(), skel:decomp_fun(), skel:recomp_fun()) -> fun((pid()) -> pid()).
-make(WorkFlow, Decomp, Recomp) ->
+-export_type([ workflow/0 ]).
+
+-type workflow() :: { decomp, [ propertiy(), ...]}.
+-type propertiy() :: { do, skel:workflow() } |
+                     { decomp, skel:decomp_fun() } |
+                     { recomp, skel:recomp_fun() }.
+
+
+-spec make( [ propertiy(), ... ] ) -> skel:maker_fun().
+make(Proplist) ->
+  make ( _Workflow = proplists:get_value( do, Proplist),
+         _Decomp = proplists:get_value( decomp, Proplist),
+         _Recomp = proplists:get_value( recomp, Proplist)).
+
+-spec make( skel:workflow(), skel:decomp_fun(), skel:recomp_fun())
+          -> skel:maker_fun().
+make( WorkFlow, Decomp, Recomp ) when is_function(Decomp, 1),
+                                      is_function(Recomp, 1) ->
   fun(NextPid) ->
     RecompPid = spawn(sk_decomp_recomp, start, [Recomp, NextPid]),
     WorkerPid = sk_utils:start_worker(WorkFlow, RecompPid),

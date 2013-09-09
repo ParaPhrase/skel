@@ -13,7 +13,6 @@
         ,stop_workers/2
         ]).
 
--include("skel.hrl").
 
 -ifdef(TEST).
 -compile(export_all).

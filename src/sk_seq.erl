@@ -17,14 +17,18 @@
         ,make/1
         ]).
 
--include("skel.hrl").
 
 -ifdef(TEST).
 -compile(export_all).
 -endif.
 
+-export_type([ workflow/0 ]).
+
+-type workflow() :: { seq, skel:worker_fun()}.
+
+  
 -spec make(skel:worker_fun())  -> skel:maker_fun().
-make(WorkerFun) ->
+make(WorkerFun) when is_function(WorkerFun, 1) ->
   fun(NextPid) ->
     spawn(?MODULE, start, [WorkerFun, NextPid])
   end.

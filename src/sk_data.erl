@@ -25,8 +25,6 @@
         ,filter_with/1
         ]).
 
--include("skel.hrl").
-
 -ifdef(TEST).
 -compile(export_all).
 -endif.
@@ -78,13 +76,13 @@ recomp_with(RecompFun) ->
     {data, RecompFun(Values), Ids}
   end.
 
--spec reduce_with(skel:reduce_fun()) -> skel:data_reduce_fun().
+-spec reduce_with(sk_reduce:reduce_fun()) -> skel:data_reduce_fun().
 reduce_with(Reduce) ->
   fun({data, _, Ids} = DataMessage1, DataMessage2) ->
     {data, Reduce(value(DataMessage1), value(DataMessage2)), Ids}
   end.
 
--spec filter_with(skel:filter_fun()) -> skel:data_filter_fun().
+-spec filter_with(sk_feedback:filter_fun()) -> skel:data_filter_fun().
 filter_with(Filter) ->
   fun({data, _, _} = DataMessage1) ->
     Filter(value(DataMessage1))

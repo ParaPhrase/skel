@@ -16,8 +16,6 @@
         ,id/1
         ]).
 
--include("skel.hrl").
-
 -ifdef(TEST).
 -compile(export_all).
 -endif.
@@ -75,7 +73,7 @@ decomp_map_recomp(WorkFlowFun, Decomp, Recomp) ->
     Recomp([WorkFlowFun(Part) || Part <- Decomp(Input)])
   end.
 
--spec feedback(skel:worker_fun(), skel:filter_fun(), any()) -> any().
+-spec feedback(skel:worker_fun(), sk_feedback:filter_fun(), any()) -> any().
 feedback(WorkFlowFun, FilterFun, Input) ->
   Input1 = WorkFlowFun(Input),
   case FilterFun(Input1) of
