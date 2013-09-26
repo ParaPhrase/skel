@@ -9,6 +9,6 @@
 simple_example_of_farm_usage_test()->
     ?assertSameDataInside( [ 0,3,6,9,12  ],
                            skel:do( [{farm,
-                                      [ fun (X) -> X*3 end],
-                                      4}] ,
+                                      [{do, [ fun (X) -> X*3 end ]},
+                                       {workers, 4}]}] ,
                                     [ 0,1,2,3,4 ]  )).

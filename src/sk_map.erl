@@ -13,15 +13,33 @@
 -module(sk_map).
 
 -export([
-         make/3
+         make/1
         ]).
 
 -ifdef(TEST).
 -compile(export_all).
 -endif.
 
+
+-export_type([ workflow/0 ]).
+
+-type workflow() :: { map, [ propertiy(), ...]}.
+-type propertiy() :: { do, skel:workflow() } |
+                     { decomp, skel:decomp_fun()} |
+                     { recomp, skel:recomp_fun()}.
+
+
+
+-spec make([ propertiy(), ... ]) -> skel:maker_fun().
+make(Proplist) ->
+  make ( _Workflow = proplists:get_value( do, Proplist),
+         _Decomp = proplists:get_value( decomp, Proplist),
+         _Recomp = proplists:get_value( recomp, Proplist)).
+
+
 -spec make(skel:workflow(), skel:decomp_fun(), skel:recomp_fun()) -> fun((pid()) -> pid()).
-make(WorkFlow, Decomp, Recomp) ->
+make(WorkFlow, Decomp, Recomp) when is_function( Decomp, 1 ),
+                                    is_function( Recomp, 1)->
   fun(NextPid) ->
     CombinerPid = spawn(sk_map_combiner, start, [Recomp, NextPid]),
     % We don't start workers until we know how many partitions we need.

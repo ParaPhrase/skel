@@ -22,8 +22,20 @@
 -compile(export_all).
 -endif.
 
--spec make(skel:workflow()) -> skel:maker_fun().
-make(WorkFlow) ->
+-export_type([ workflow/0 ]).
+
+-type workflow() :: { ord, [ propertiy(), ...]}.
+-type propertiy() :: { do, skel:workflow() }.
+
+
+
+-spec make( [ propertiy(), ... ] ) -> skel:maker_fun().
+make( Proplist ) ->
+  local_make( proplists:get_value( do, Proplist) ).
+
+
+-spec local_make(skel:workflow()) -> skel:maker_fun().
+local_make(WorkFlow) ->
   fun(NextPid) ->
     ReordererPid = spawn(sk_ord_reorderer, start, [NextPid]),
     WorkerPid = sk_utils:start_worker(WorkFlow, ReordererPid),

@@ -11,15 +11,28 @@
 -module(sk_farm).
 
 -export([
-         make/2
+         make/1
         ]).
 
 -ifdef(TEST).
 -compile(export_all).
 -endif.
 
+-export_type([ workflow/0 ]).
+
+-type workflow() :: { farm, [ propertiy(), ...]}.
+-type propertiy() :: { do, skel:workflow() } |
+                     { workers, pos_integer()}.
+
+
+-spec make( [ propertiy(), ...] ) -> skel:maker_fun().
+make(Proplist) ->
+  make ( _Workflow = proplists:get_value( do, Proplist),
+         _NumWorkers = proplists:get_value( workers, Proplist)).
+
+
 -spec make(pos_integer(), skel:workflow()) -> skel:maker_fun().
-make(NWorkers, WorkFlow) ->
+make(WorkFlow, NWorkers) ->
   fun(NextPid) ->
     CollectorPid = spawn(sk_farm_collector, start, [NWorkers, NextPid]),
     WorkerPids = sk_utils:start_workers(NWorkers, WorkFlow, CollectorPid),

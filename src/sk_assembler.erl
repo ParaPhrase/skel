@@ -37,24 +37,17 @@ run (WorkFlow, Input) when is_list(WorkFlow) ->
 -spec parse(skel:wf_item()) -> skel:maker_fun().
 parse(Fun) when is_function(Fun, 1) ->
   parse({seq, Fun});
-parse({seq, Fun}) when is_function(Fun, 1) ->
-  sk_seq:make(Fun);
-parse({pipe, WorkFlow}) ->
-  sk_pipe:make(WorkFlow);
-parse({ord, WorkFlow}) ->
-  sk_ord:make(WorkFlow);
-parse({farm, WorkFlow, NWorkers}) ->
-  sk_farm:make(NWorkers, WorkFlow);
-parse({decomp, WorkFlow, Decomp, Recomp}) when is_function(Decomp, 1),
-                                               is_function(Recomp, 1) ->
-  sk_decomp:make(WorkFlow, Decomp, Recomp);
-parse({map, WorkFlow, Decomp, Recomp}) when is_function(Decomp, 1),
-                                            is_function(Recomp, 1) ->
-  sk_map:make(WorkFlow, Decomp, Recomp);
-parse({reduce, Reduce, Decomp}) when is_function(Reduce, 2),
-                                     is_function(Decomp, 1) ->
-  sk_reduce:make(Decomp, Reduce);
-parse({feedback, WorkFlow, Filter}) when is_function(Filter, 1) ->
-  sk_feedback:make(WorkFlow, Filter).
+
+parse({Workflow, Proplist}) ->
+  case Workflow of
+    seq       -> sk_seq:make( Proplist);
+    pipe      -> sk_pipe:make( Proplist);
+    ord       -> sk_ord:make( Proplist);
+    farm      -> sk_farm:make( Proplist);
+    decomp    -> sk_decomp:make( Proplist);
+    map       -> sk_map:make( Proplist);
+    reduce    -> sk_reduce:make( Proplist);
+    feedback  -> sk_feedback:make( Proplist)
+  end.
 
 

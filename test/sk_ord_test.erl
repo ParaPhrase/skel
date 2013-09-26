@@ -8,16 +8,18 @@
 
 
 failing_order_test() ->
-    List = [a,b,c,d,f,g],
-    ?assertNot( List =:=
-                    skel:do( [{ farm, [ ?random_sleep_for( 100 )],
-                              2}],
-                           List)).
+  List = [a,b,c,d,f,g],
+  ?assertNot( List =:=
+                skel:do( [{ farm,
+                            [{do, [ ?random_sleep_for( 100 )]},
+                             {workers, 2}]}],
+                         List)).
 
 simple_order_test() ->
-    List = [a,b,c,d,f,g],
-    ?assertEqual( List,
-                  skel:do( [{ ord,
-                              [{ farm, [ ?random_sleep_for( 100 )],
-                                 2}]}],
-                           List)).
+  List = [a,b,c,d,f,g],
+  ?assertEqual( List,
+                skel:do( [{ ord,
+                            [{ do, [{farm,
+                                     [{do, [ ?random_sleep_for( 100 )]},
+                                      {workers, 2}]}]} ] }],
+                         List)).
