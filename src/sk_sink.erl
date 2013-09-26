@@ -17,6 +17,7 @@
          make/0
         ,start_acc/1
         ,make/1
+        ,make/2
         ,start_mod/2
         ]).
 
@@ -35,17 +36,20 @@
 -callback terminate(State :: term()) ->
     term().
 
--spec make() -> skel:maker_fun().
+-spec make() -> pid().
 make() ->
-  fun(Pid) ->
-    spawn(?MODULE, start_acc, [Pid])
-  end.
+  spawn(?MODULE, start_acc, [ self() ]).
 
--spec make(module()) -> skel:maker_fun().
+
+-spec make(module()) -> pid().
 make(OutputMod) ->
-  fun(Pid) ->
-    spawn(?MODULE, start_mod, [OutputMod, Pid])
-  end.
+  make( OutputMod, self()).
+
+-spec make(module(), pid()) -> pid().
+make(OutputMod, Pid) ->
+  spawn(?MODULE, start_mod, [OutputMod, Pid]).
+
+
 
 -spec start_acc(pid()) -> 'eos'.
 start_acc(NextPid) ->

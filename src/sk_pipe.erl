@@ -13,13 +13,22 @@
          make/1
         ]).
 
--include("skel.hrl").
 
 -ifdef(TEST).
 -compile(export_all).
 -endif.
 
--spec make(skel:workflow()) -> skel:maker_fun().
+-export_type([ workflow/0 ]).
+
+-type workflow() :: { pipe, [ propertiy(), ...]}.
+-type propertiy() :: { do, skel:workflow() }.
+
+
+
+-spec make( [propertiy(), ... ] ) -> skel:maker_fun().
+make( _Proplist = [ {do, WorkFlow }] ) ->
+  make( WorkFlow  );
+  
 make(WorkFlow) ->
   fun(NextPid) ->
     sk_assembler:make(WorkFlow, NextPid)

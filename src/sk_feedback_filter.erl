@@ -17,15 +17,13 @@
          start/4
         ]).
 
--include("skel.hrl").
-
 -define(counter, sk_feedback_bicounter).
 
 -ifdef(TEST).
 -compile(export_all).
 -endif.
 
--spec start(skel:filter_fun(), reference(), pid(), pid()) -> 'eos'.
+-spec start(sk_feedback:filter_fun(), reference(), pid(), pid()) -> 'eos'.
 start(FilterFun, Ref, CounterPid, NextPid) ->
   sk_tracer:t(75, self(), {?MODULE, start}, [{reference, Ref},
                                              {counter_pid, CounterPid},

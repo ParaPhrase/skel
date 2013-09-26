@@ -18,7 +18,6 @@
         ,report_event/5 ,t/5
         ]).
 
--include("skel.hrl").
 
 -compile(nowarn_unused_vars).
 
