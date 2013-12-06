@@ -1,9 +1,10 @@
 %%%----------------------------------------------------------------------------
 %%% @author Sam Elliott <ashe@st-andrews.ac.uk>
 %%% @copyright 2012 University of St Andrews (See LICENCE)
+%%% @headerfile "skel.hrl"
 %%% @doc This module contains the source logic.
 %%%
-%%% A source is a process that provides independent inputs to the first process
+%%% A source is a process that provides the given inputs to the first process
 %%% in a skeleton workflow.
 %%%
 %%% Two kinds of sources are provided - a list source (the default) and
@@ -36,13 +37,17 @@
 -callback terminate(State :: term()) ->
     ok.
 
--spec make(skel:input()) -> skel:maker_fun().
+%% @doc Creates a new child process using Input, given the parent process 
+%% <tt>Pid</tt>.
+-spec make(input()) -> maker_fun().
 make(Input) ->
   fun(Pid) ->
     spawn(?MODULE, start, [Input, Pid])
   end.
 
--spec start(skel:input(), pid()) -> 'eos'.
+%% @doc Transmits each input in <tt>Input</tt> to the process <tt>NextPid</tt>.
+%% @todo add documentation for the callback loop
+-spec start(input(), pid()) -> 'eos'.
 start(Input, NextPid) when is_list(Input) ->
   list_loop(Input, NextPid);
 start(InputMod, NextPid) when is_atom(InputMod) ->
@@ -53,12 +58,15 @@ start(InputMod, NextPid) when is_atom(InputMod) ->
       InputMod:terminate(State)
   end.
 
+%% @doc Recursively sends each input in a given list to the process 
+%% <tt>NextPid</tt>.
 list_loop([], NextPid) ->
   send_eos(NextPid);
 list_loop([Input|Inputs], NextPid) ->
   send_input(Input, NextPid),
   list_loop(Inputs, NextPid).
 
+%% @todo doc
 callback_loop(InputMod, State, NextPid) ->
   case InputMod:next_input(State) of
     {input, NextInput, NewState} ->
@@ -72,6 +80,8 @@ callback_loop(InputMod, State, NextPid) ->
       eos
   end.
 
+%% @doc <tt>Input</tt> is formatted as a data message and sent to the 
+%% process <tt>NextPid</tt>. 
 send_input(Input, NextPid) ->
   DataMessage = sk_data:pure(Input),
   sk_tracer:t(50, self(), NextPid, {?MODULE, data}, [{output, DataMessage}]),

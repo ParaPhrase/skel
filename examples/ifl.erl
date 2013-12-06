@@ -39,7 +39,7 @@ test_farm(Stages) ->
   [{farm, [?seq], Stages}].
 
 test_map(Stages) ->
-  [{map, [?seq], decomp_for(Stages), fun ?MODULE:recomp/1}].
+  [{cluster, [{farm, [?seq], Stages}], decomp_for(Stages), fun ?MODULE:recomp/1}].
 
 test_reduce(Stages) ->
   [{reduce, fun ?MODULE:binary/2, decomp_for(Stages)}].

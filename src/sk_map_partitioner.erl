@@ -1,37 +1,63 @@
 %%%----------------------------------------------------------------------------
-%%% @author Sam Elliott <ashe@st-andrews.ac.uk>
+%%% @author Sam Elliot <ashe@st-andrews.ac.uk>
 %%% @copyright 2012 University of St Andrews (See LICENCE)
-%%% @doc This module contains `map` skeleton partitioner logic.
-%%%
-%%% The `map` skeleton, takes each input, decomposes it, and puts each of the 
-%%% decomposed parts through their own inner skeletons. After they have gone 
-%%% through the inner skeletons, they are recomposed into a single input before
-%%% being forwarded to the next skeleton.
-%%%
-%%% The partitioner splits each input according to a developer-defined decomp
-%%% function, and then sends one part to each inner skeleton.
-%%%
+%%% @headerfile "skel.hrl"
+%%% 
+%%% @doc This module contains the simple 'map' skeleton partitioner logic.
+%%% 
+%%% The Map skeleton is a parallel map. The skeleton applies a given function 
+%%% to the elements within one or more lists.
+%%% 
+%%% The partitioner takes the input list, dispatching each partite element to 
+%%% a pool of worker processes. These worker processes apply the 
+%%% developer-defined function to each partite element. 
+%%% 
+%%% This module supports both the automatic creation of worker processes, and 
+%%% the ability to define the exact number to be used. With the former, the 
+%%% minimal number of workers are created for all inputs. This is given by the 
+%%% number of elements in the longest list.
+%%% 
 %%% @end
 %%%----------------------------------------------------------------------------
+
 -module(sk_map_partitioner).
 
 -export([
-         start/3
+          start/3
         ]).
 
 -include("skel.hrl").
 
--ifdef(TEST).
--compile(export_all).
--endif.
 
--spec start(skel:decomp_fun(), skel:workflow(), pid()) -> 'eos'.
-start(Partitioner, WorkFlow, CombinerPid) ->
+-spec start(atom(), workflow() | [pid()], pid()) -> 'eos'.
+%% @doc Starts the recursive partitioning of inputs. 
+%% 
+%% If the number of workers to be used is specified, a list of Pids for those 
+%% worker processes are received through `WorkerPids' and the second clause 
+%% used. Alternatively, a workflow is received as `Workflow' and the first 
+%% clause is used. In the case of the former, the workers have already 
+%% been initialised with their workflows and so the inclusion of the 
+%% `WorkFlow' argument is unneeded in this clause. 
+%% 
+%% The atoms `auto' and `main' are used to determine whether a list of worker 
+%% Pids or a workflow is received. `CombinerPid' specifies the Pid of the 
+%% process that will recompose the partite elements following their 
+%% application to the Workflow.
+%% 
+%% @todo Wait, can't this atom be gotten rid of? The types are sufficiently different.
+start(auto, WorkFlow, CombinerPid) ->
   sk_tracer:t(75, self(), {?MODULE, start}, [{combiner, CombinerPid}]),
-  DataFun = sk_data:decomp_by(Partitioner),
-  loop(DataFun, WorkFlow, CombinerPid, []).
+  loop(decomp_by(), WorkFlow, CombinerPid, []);
+start(man, WorkerPids, CombinerPid) when is_pid(hd(WorkerPids)) ->
+  sk_tracer:t(75, self(), {?MODULE, start}, [{combiner, CombinerPid}]),
+  loop(decomp_by(), CombinerPid, WorkerPids).
 
--spec loop(skel:data_decomp_fun(), skel:workflow(), pid(), [pid()]) -> 'eos'.
+
+-spec loop(data_decomp_fun(), workflow(), pid(), [pid()]) -> 'eos'.
+%% @doc Recursively receives inputs as messages, which are decomposed, and the 
+%% resulting messages sent to individual workers. `loop/4' is used in place of 
+%% {@link loop/3} when the number of workers to be used is automatically 
+%% determined by the total number of partite elements of an input.
 loop(DataPartitionerFun, WorkFlow, CombinerPid, WorkerPids) ->
   receive
     {data, _, _} = DataMessage ->
@@ -46,8 +72,43 @@ loop(DataPartitionerFun, WorkFlow, CombinerPid, WorkerPids) ->
       eos
   end.
 
-% Start more workers so we have enough workers for the partitions
--spec start_workers(pos_integer(), skel:workflow(), pid(), [pid()]) -> [pid()].
+
+-spec loop(data_decomp_fun(), pid(), [pid()]) -> 'eos'.
+%% @doc Recursively receives inputs as messages, which are decomposed, and the 
+%% resulting messages sent to individual workers. `loop/3' is used in place of 
+%% {@link loop/4} when the number of workers is set by the developer.
+loop(DataPartitionerFun, CombinerPid, WorkerPids) ->
+  receive
+    {data, _, _} = DataMessage ->
+      PartitionMessages = DataPartitionerFun(DataMessage),
+      Ref = make_ref(),
+      sk_tracer:t(60, self(), {?MODULE, data}, [{ref, Ref}, {input, DataMessage}, {partitions, PartitionMessages}]),
+      dispatch(Ref, length(PartitionMessages), PartitionMessages, WorkerPids),
+      loop(DataPartitionerFun, CombinerPid, WorkerPids);
+    {system, eos} ->
+      sk_utils:stop_workers(?MODULE, WorkerPids),
+      eos
+    end.
+
+
+-spec decomp_by() -> data_decomp_fun().
+%% @doc Provides the decomposition function and means to split a single input 
+%% into many. This is based on the identity function, as the Map skeleton is 
+%% applied to lists.
+decomp_by() ->
+  fun({data, Value, Ids}) ->
+    [{data, X, Ids} || X <- Value]
+  end.
+
+-spec start_workers(pos_integer(), workflow(), pid(), [pid()]) -> [pid()].
+%% @doc Used when the number of workers is not set by the developer.
+%% 
+%% Workers are started if the number needed exceeds the number we already 
+%% have. The total number of workers is derived from the number of partitions 
+%% to which `WorkFlow' will be applied, as given by `NPartitions'. This 
+%% includes 'recycled' workers from previous inputs. Both new and old worker 
+%% processes are returned so that they might be used. Worker processes are 
+%% represented as a list of their Pids under `WorkerPids'.
 start_workers(NPartitions, WorkFlow, CombinerPid, WorkerPids) when NPartitions > length(WorkerPids) ->
   NNewWorkers = NPartitions - length(WorkerPids),
   NewWorkerPids = sk_utils:start_workers(NNewWorkers, WorkFlow, CombinerPid),
@@ -55,16 +116,24 @@ start_workers(NPartitions, WorkFlow, CombinerPid, WorkerPids) when NPartitions >
 start_workers(_NPartitions, _WorkFlow, _CombinerPid, WorkerPids) ->
   WorkerPids.
 
-% We can guarantee to always have enough workers by the time we get to this method.
--spec dispatch(reference(), pos_integer(), [skel:data_message(),...], [pid()]) -> 'ok'.
+
+-spec dispatch(reference(), pos_integer(), [data_message(),...], [pid()]) -> 'ok'.
+%% @doc Partite elements of input stored in `PartitionMessages' are formatted 
+%% and sent to a worker from `WorkerPids'. The reference argument `Ref' 
+%% ensures that partite elements from different inputs are not incorrectly 
+%% included.
 dispatch(Ref, NPartitions, PartitionMessages, WorkerPids) ->
   dispatch(Ref, NPartitions, 1, PartitionMessages, WorkerPids).
 
--spec dispatch(reference(), pos_integer(), pos_integer(), [skel:data_message(),...], [pid()]) -> 'ok'.
+
+-spec dispatch(reference(), pos_integer(), pos_integer(), [data_message(),...], [pid()]) -> 'ok'.
+%% @doc Inner-function for {@link dispatch/4}. Recursively sends each message 
+%% to a worker, following the addition of references to allow identification 
+%% and recomposition.
 dispatch(_Ref,_NPartitions, _Idx, [], _) ->
   ok;
 dispatch(Ref, NPartitions, Idx, [PartitionMessage|PartitionMessages], [WorkerPid|WorkerPids]) ->
   PartitionMessage1 = sk_data:push({decomp, Ref, Idx, NPartitions}, PartitionMessage),
   sk_tracer:t(50, self(), WorkerPid, {?MODULE, data}, [{partition, PartitionMessage1}]),
   WorkerPid ! PartitionMessage1,
-  dispatch(Ref, NPartitions, Idx+1, PartitionMessages, WorkerPids).
+  dispatch(Ref, NPartitions, Idx+1, PartitionMessages, WorkerPids ++ [WorkerPid]).
