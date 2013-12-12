@@ -3,7 +3,7 @@ skel
 
 A Streaming Process-based Skeleton Library for Erlang
 
-Usage:
+Usage
 ------
 
 `make` to compile the library source
@@ -19,6 +19,11 @@ Usage:
 `make clean` to clear up the repo.
 
 `make todo` to see some todos
+
+Tutorial
+--------
+
+A tutorial and API documentation may be found at: [Link](http://chrisb.host.cs.st-andrews.ac.uk/skel.html)
 
 
 Copyright

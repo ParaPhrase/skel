@@ -48,7 +48,7 @@ example2(Images) ->
   skel:run([{seq, fun ?MODULE:p/1}, {seq, fun ?MODULE:f/1}], Images).
 
 example3(Images) ->
-  skel:do([{seq, fun ?MODULE:p/1}, {map, [{seq, fun ?MODULE:f_prime/1}], fun ?MODULE:decomp/1, fun ?MODULE:recomp/1}], Images).
+  skel:do([{seq, fun ?MODULE:p/1}, {cluster, [{farm, [{seq, fun ?MODULE:f_prime/1}], 4}], fun ?MODULE:decomp/1, fun ?MODULE:recomp/1}], Images).
 
 example4(Images) ->
-  skel:run([{farm, [{seq, fun ?MODULE:p/1}], 4}, {map, [{seq, fun ?MODULE:f_prime/1}], fun ?MODULE:decomp/1, fun ?MODULE:recomp/1}], Images).
+  skel:run([{farm, [{seq, fun ?MODULE:p/1}], 4}, {cluster, [{farm, [{seq, fun ?MODULE:f_prime/1}], 4}], fun ?MODULE:decomp/1, fun ?MODULE:recomp/1}], Images).

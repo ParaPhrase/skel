@@ -6,6 +6,9 @@
 %%%
 %%% This is primarily used so we can use the same workflow specification when
 %%% we need sequential benchmarks.
+%%%
+%%% @headerfile "skel.hrl"
+%%%
 %%% @end
 %%%----------------------------------------------------------------------------
 -module(sk_assembler_sequential).
@@ -22,25 +25,25 @@
 -compile(export_all).
 -endif.
 
--spec run(skel:workflow(), list()) -> pid().
+-spec run(workflow(), list()) -> pid().
 run(WorkFlow, Inputs) ->
   Fun = make(WorkFlow),
   self() ! {sink_results, [Fun(Input) || Input <- Inputs]},
   self().
 
--spec make(skel:workflow()) -> skel:worker_fun().
+-spec make(workflow()) -> worker_fun().
 make(WorkFlow) ->
   Funs = [parse(Section) || Section <- WorkFlow],
   lists:foldl(fun ?MODULE:compose/2, fun ?MODULE:id/1, Funs).
 
 -spec compose(fun((B) -> C), fun((A) -> B)) -> fun((A) -> C)
   when A  :: term(), B  :: term(), C  :: term().
+compose(BC, AB) -> fun(X) -> BC(AB(X)) end.
 -spec id(A) -> A
   when A :: term().
-compose(BC, AB) -> fun(X) -> BC(AB(X)) end.
 id(X) -> X.
 
--spec parse(skel:wf_item()) -> fun().
+-spec parse(wf_item()) -> fun().
 parse(Fun) when is_function(Fun, 1) ->
   parse({seq, Fun});
 parse({seq, Fun}) when is_function(Fun, 1) ->
@@ -69,13 +72,13 @@ parse({feedback, WorkFlow, FilterFun}) when is_function(FilterFun, 1) ->
     feedback(WorkFlowFun, FilterFun, Input)
   end.
 
--spec decomp_map_recomp(skel:worker_fun(), skel:decomp_fun(), skel:recomp_fun()) -> skel:worker_fun().
+-spec decomp_map_recomp(worker_fun(), decomp_fun(), recomp_fun()) -> worker_fun().
 decomp_map_recomp(WorkFlowFun, Decomp, Recomp) ->
   fun(Input) ->
     Recomp([WorkFlowFun(Part) || Part <- Decomp(Input)])
   end.
 
--spec feedback(skel:worker_fun(), skel:filter_fun(), any()) -> any().
+-spec feedback(worker_fun(), filter_fun(), any()) -> any().
 feedback(WorkFlowFun, FilterFun, Input) ->
   Input1 = WorkFlowFun(Input),
   case FilterFun(Input1) of

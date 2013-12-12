@@ -1,9 +1,11 @@
 %%%----------------------------------------------------------------------------
 %%% @author Sam Elliott <ashe@st-andrews.ac.uk>
 %%% @copyright 2012 University of St Andrews (See LICENCE)
-%%% @doc This module contains `ord` skeleton reordering logic.
+%%% @headerfile "skel.hrl"
+%%% 
+%%% @doc This module contains 'ord' skeleton reordering logic.
 %%%
-%%% The `ord` skeleton can reorder outputs from its inner skeletons such that
+%%% The 'ord' skeleton can reorder outputs from its inner skeletons such that
 %%% they have the same order coming out the ord skeleton as they had going into
 %%% it.
 %%%
@@ -25,11 +27,21 @@
 -endif.
 
 -spec start(pid()) -> 'eos'.
+%% @doc Ensures that output is given in the same order as the input received. 
+%% For each message reveived as output, that message is only released when all 
+%% outstanding messages have been sent.
 start(NextPid) ->
   sk_tracer:t(75, self(), {?MODULE, start}, []),
   loop(0, dict:new(), NextPid).
 
+% receive loop until eos
+% opens the data message
+% dict1 is a dictionary of {Identifier, Data Message} key-value pairs
+% Seen is a count of the loop: how many things it has seen.
+
 -spec loop(non_neg_integer(), dict(), pid()) -> 'eos'.
+%% @doc Recursively receives and stores messages until they are ready for 
+%% release.
 loop(Seen, Dict, NextPid) ->
   receive
     {data, _, _} = DataMessage ->
@@ -43,11 +55,16 @@ loop(Seen, Dict, NextPid) ->
       eos
   end.
 
--spec store(pos_integer(), skel:data_message(), dict()) -> dict().
+-spec store(pos_integer(), data_message(), dict()) -> dict().
+%% @doc Stores the given `Idx', indicating position, and message `DataMessage' 
+%% in the dictionary `Dict'. Returns the resulting dictionary.
 store(Idx, DataMessage, Dict) ->
   dict:store(Idx, DataMessage, Dict).
 
 -spec forward(non_neg_integer(), dict(), pid()) -> {non_neg_integer(), dict()}.
+%% @doc Determines if any messages in the dictionary `Dict' can be released to 
+%% the process `NextPid'. This decision is based upon which messages have 
+%% already been released as indicated by the `Seen' counter. 
 forward(Seen, Dict, NextPid) ->
   case dict:find(Seen+1, Dict) of
     error ->

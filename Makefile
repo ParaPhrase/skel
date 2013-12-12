@@ -1,4 +1,4 @@
-.PHONY : compile console typecheck typer clean
+.PHONY : compile console typecheck typer clean tutorial
 
 all: compile
 
@@ -7,6 +7,9 @@ clean:
 	@rm -f doc/skel.aux doc/skel.bbl doc/skel.blg doc/skel.fdb_latexmk doc/skel.fls
 	@rm -f doc/skel.out doc/skel.synctex.gz doc/skel.pdf doc/skel.log
 	@rm -f ./.skel.plt ./.otp.plt skel.tar.gz
+	@rm -f ifl.data.10.log ifl.verbose.10.log
+	@rm -f doc/*.html doc/*.css doc/edoc-info doc/erlang.png
+	@rm -f tutorial/bin/*.html tutorial/bin/*.png
 
 compile: src/*.erl
 	@./rebar compile
@@ -34,7 +37,8 @@ package: skel.tar.gz
 
 todo:
 	@echo "==> skel (todo)"
-	@grep -ir "TODO" --exclude Makefile -- .
+	@grep -ir "TODO" --exclude Makefile --exclude README.md \
+		--exclude-dir .git -- .
 
 skel.tar.gz: compile
 	@tar -czf skel.tar.gz -C .. --exclude "skel.tar.gz" skel
@@ -47,6 +51,24 @@ skel.tar.gz: compile
 	@echo "==> skel (plt)"
 	@dialyzer --add_to_plt --plt ./.otp.plt --output_plt ./.skel.plt -c ebin
 
+docs: compile
+	@rm -f doc/*.html doc/*.css doc/edoc-info doc/erlang.png
+	@./rebar doc
+
 doc/skel.pdf: doc/skel.tex
 	@pdflatex -interaction=batchmode -output-directory=./doc skel.tex
 	@pdflatex -interaction=batchmode -output-directory=./doc skel.tex
+
+md: docs
+	@echo "==> Compiling Tutorial"
+	@multimarkdown -b -f ./tutorial/src/*.md
+	@mv ./tutorial/src/*.html ./tutorial/bin
+	@cp ./tutorial/src/*.png ./tutorial/bin
+	@echo "Documentation may be found in tutorial/bin"
+
+cleanmd:
+	@rm -f tutorial/bin/*.html
+
+# Linux variant? (xdg-open)
+tutorial: md
+	@open -a /Applications/Safari.app tutorial/bin/index.html
