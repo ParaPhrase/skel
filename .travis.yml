@@ -5,4 +5,5 @@ otp_release:
   - R15B03
   - R15B02
   - R15B01
+script: "make test"
   

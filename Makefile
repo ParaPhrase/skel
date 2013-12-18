@@ -29,6 +29,9 @@ typer: compile .skel.plt
 	@echo "==> skel (typer)"
 	@typer --plt ./.skel.plt --show -I include -pa ebin -r src
 
+test: compile
+	@./rebar skip_deps=true eunit
+
 pdf: doc/skel.pdf
 	@echo "==> skel (pdf)"
 
