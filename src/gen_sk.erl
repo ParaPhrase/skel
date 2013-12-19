@@ -20,11 +20,11 @@
 -callback init(Args :: term()) ->
   {ok, State :: term()}.
 
--callback handle_data(Message :: skel:data_message(), State :: term()) ->
-  {forward, Message1 :: [skel:data_message(),...], NewState :: term()} |
+-callback handle_data(Message :: data_message(), State :: term()) ->
+  {forward, Message1 :: [ data_message(),...], NewState :: term()} |
   {eos, NewState :: term()}.
 
--callback handle_system(Message :: skel:data_message(), State :: term()) ->
+-callback handle_system(Message :: data_message(), State :: term()) ->
   {forward, NewState :: term()} |
   {drop, NewState :: term()} |
   {eos, NewState :: term()}.
