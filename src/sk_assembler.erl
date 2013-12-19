@@ -63,12 +63,6 @@ parse({map, WorkFlow, NWorkers}) ->
 parse({cluster, WorkFlow, Decomp, Recomp}) when is_function(Decomp, 1),
                                                is_function(Recomp, 1) ->
   sk_cluster:make(WorkFlow, Decomp, Recomp);
-% parse({decomp, WorkFlow, Decomp, Recomp}) when is_function(Decomp, 1),
-%                                                is_function(Recomp, 1) ->
-%   sk_decomp:make(WorkFlow, Decomp, Recomp);
-% parse({map, WorkFlow, Decomp, Recomp}) when is_function(Decomp, 1),
-%                                             is_function(Recomp, 1) ->
-%   sk_map:make(WorkFlow, Decomp, Recomp);
 parse({reduce, Reduce, Decomp}) when is_function(Reduce, 2),
                                      is_function(Decomp, 1) ->
   sk_reduce:make(Decomp, Reduce);
