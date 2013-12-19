@@ -38,9 +38,13 @@ typer: compile .otp.plt
 	@typer --plt ./.otp.plt --show -I include -pa ebin -r src
 
 
-.PHONY: test
-test: compile
+.PHONY: eunit
+eunit: compile
 	@./rebar skip_deps=true eunit
+
+
+.PHONY: test_all
+test_all: eunit typecheck
 
 
 pdf: doc/skel.pdf
