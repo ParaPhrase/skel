@@ -29,8 +29,29 @@ bm(NSchedulers, Fn, NInputs, PartsPerInput, NTimes) ->
   io:format("~p: (~p Schedulers; ~p Inputs; ~p Parts): ~n\t~w~n", [Fn, NSchedulers, NInputs, PartsPerInput, Results]),
   Results.
 
-sequential(Inputs) ->
-  [sk_reduce:fold1(fun ?MODULE:reduce/2, Input) || Input <- Inputs ].
 
 parallel(Inputs) ->
   skel:do([{reduce, fun ?MODULE:reduce/2, fun ?MODULE:id/1}], Inputs).
+
+
+sequential(Inputs) ->
+  [fold1(fun ?MODULE:reduce/2, Input) || Input <- Inputs ].
+
+
+% Implemented as a treefold underneath
+
+-spec fold1(fun((A, A) -> A), [A,...]) -> A when A :: term().
+%% @doc Sequential `reduce' entry-point. Primarily for comparison purposes.
+fold1(_ReduceFun, [L1]) ->
+  L1;
+fold1(ReduceFun, [L1, L2 | List]) ->
+  fold1(ReduceFun, [ReduceFun(L1, L2) | pairs(ReduceFun, List)]).
+
+-spec pairs(fun((A, A) -> A), [A]) -> [A] when A :: term().
+%% @doc Second stage to {@link fold1}'s  sequential `reduce'. Recursively
+%% pairs the first two elements in the list and applies the given function
+%% `Fun'.
+pairs(Fun, [L1,L2|List]) ->
+  [Fun(L1,L2) | pairs(Fun, List)];
+pairs(_Fun, List) ->
+  List.
