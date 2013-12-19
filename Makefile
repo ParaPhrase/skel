@@ -29,7 +29,7 @@ examples: compile
 .PHONY: typecheck
 typecheck: compile .otp.plt
 	@echo "==> skel (typecheck)"
-	@dialyzer --no_check_plt --plt ./.otp.plt -c ebin -Wrace_conditions
+	@dialyzer --no_check_plt --no_native --plt ./.otp.plt -c ebin -Wrace_conditions
 
 
 .PHONY: typer
