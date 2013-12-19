@@ -11,7 +11,7 @@ clean:
 	@rm -f doc/*.html doc/*.css doc/edoc-info doc/erlang.png
 	@rm -f tutorial/bin/*.html tutorial/bin/*.png
 
-compile: src/*.erl
+compile:
 	@./rebar compile
 
 console: compile
