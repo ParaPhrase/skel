@@ -32,7 +32,7 @@
 
 -include("skel.hrl").
 
--spec make(skel:workflow()) -> skel:maker_fun().
+-spec make( workflow()) -> maker_fun().
 %% @doc Produces workers according to the specified workflow. Returns an 
 %% anonymous function taking the Pid of the parent process `NextPid'.
 make(WorkFlow) ->

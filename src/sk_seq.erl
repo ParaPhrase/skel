@@ -38,7 +38,7 @@
 -compile(export_all).
 -endif.
 
--spec make(worker_fun())  -> skel:maker_fun().
+-spec make(worker_fun())  -> maker_fun().
 %% @doc Spawns a worker process performing the function `WorkerFun'. 
 %% Returns an anonymous function that takes the parent process `NextPid'
 %% as an argument. 
@@ -55,7 +55,7 @@ start(WorkerFun, NextPid) ->
   DataFun = sk_data:fmap(WorkerFun),
   loop(DataFun, NextPid).
 
--spec loop(skel:data_fun(), pid()) -> eos.
+-spec loop( data_fun(), pid()) -> eos.
 %% @doc Recursively receives and applies the input to the function `DataFun'. 
 %% Sends the resulting data message to the process `NextPid'.
 loop(DataFun, NextPid) ->
