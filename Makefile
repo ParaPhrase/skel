@@ -27,15 +27,15 @@ examples: compile
 
 
 .PHONY: typecheck
-typecheck: compile .skel.plt
+typecheck: compile .otp.plt
 	@echo "==> skel (typecheck)"
-	@dialyzer --no_check_plt --plt ./.skel.plt -c ebin -Wrace_conditions
+	@dialyzer --no_check_plt --plt ./.otp.plt -c ebin -Wrace_conditions
 
 
 .PHONY: typer
-typer: compile .skel.plt
+typer: compile .otp.plt
 	@echo "==> skel (typer)"
-	@typer --plt ./.skel.plt --show -I include -pa ebin -r src
+	@typer --plt ./.otp.plt --show -I include -pa ebin -r src
 
 
 .PHONY: test
@@ -60,10 +60,6 @@ skel.tar.gz: compile
 .otp.plt:
 	@echo "==> otp (plt) # This takes a while, go grab a coffee"
 	@dialyzer --build_plt --output_plt ./.otp.plt --apps erts kernel stdlib debugger et tools
-
-.skel.plt: .otp.plt compile
-	@echo "==> skel (plt)"
-	@dialyzer --add_to_plt --plt ./.otp.plt --output_plt ./.skel.plt -c ebin
 
 docs: compile
 	@rm -f doc/*.html doc/*.css doc/edoc-info doc/erlang.png
