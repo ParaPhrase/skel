@@ -1,7 +1,7 @@
-.PHONY : compile console typecheck typer clean tutorial
 
 all: compile
 
+.PHONY: clean
 clean:
 	@./rebar clean
 	@rm -f doc/skel.aux doc/skel.bbl doc/skel.blg doc/skel.fdb_latexmk doc/skel.fls
@@ -11,26 +11,37 @@ clean:
 	@rm -f doc/*.html doc/*.css doc/edoc-info doc/erlang.png
 	@rm -f tutorial/bin/*.html tutorial/bin/*.png
 
+.PHONY: compile
 compile:
 	@./rebar compile
 
+
+.PHONY: console
 console: compile
 	@exec erl -args_file ./priv/default.args
+
 
 examples: compile
 	@echo "==> skel (examples)"
 	@erlc +debug_info -I include -o ebin examples/*.erl
 
+
+.PHONY: typecheck
 typecheck: compile .skel.plt
 	@echo "==> skel (typecheck)"
 	@dialyzer --no_check_plt --plt ./.skel.plt -c ebin -Wrace_conditions
 
+
+.PHONY: typer
 typer: compile .skel.plt
 	@echo "==> skel (typer)"
 	@typer --plt ./.skel.plt --show -I include -pa ebin -r src
 
+
+.PHONY: test
 test: compile
 	@./rebar skip_deps=true eunit
+
 
 pdf: doc/skel.pdf
 	@echo "==> skel (pdf)"
@@ -72,6 +83,7 @@ md: docs
 cleanmd:
 	@rm -f tutorial/bin/*.html
 
+.PHONY: tutorial
 # Linux variant? (xdg-open)
 tutorial: md
 	@open -a /Applications/Safari.app tutorial/bin/index.html
