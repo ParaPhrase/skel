@@ -35,10 +35,8 @@
 -include("skel.hrl").
 
 
--spec start(worker_fun(), pid())  -> pid().
+-spec start({worker_fun()}, pid())  -> pid().
 %% @doc Spawns a worker process performing the function `WorkerFun'. 
-%% Returns an anonymous function that takes the parent process `NextPid'
-%% as an argument. 
 start({WorkerFun},NextPid ) ->
   proc_lib:spawn(?MODULE, init, [WorkerFun, NextPid]).
 
