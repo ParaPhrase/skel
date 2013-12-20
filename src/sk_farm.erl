@@ -21,17 +21,16 @@
 -module(sk_farm).
 
 -export([
-         make/2
+         start/2
         ]).
 
 -include("skel.hrl").
 
--spec make(pos_integer(), workflow()) -> maker_fun().
+-spec start(pos_integer(), workflow()) -> maker_fun().
 %% @doc Initialises a Farm skeleton given the number of workers and their 
 %% inner-workflows, respectively.
-make(NWorkers, WorkFlow) ->
-  fun(NextPid) ->
-    CollectorPid = spawn(sk_farm_collector, start, [NWorkers, NextPid]),
-    WorkerPids = sk_utils:start_workers(NWorkers, WorkFlow, CollectorPid),
-    spawn(sk_farm_emitter, start, [WorkerPids])
-  end.
+start({ WorkFlow , NWorkers}, NextPid) ->
+  CollectorPid = spawn(sk_farm_collector, start, [NWorkers, NextPid]),
+  WorkerPids = sk_utils:start_workers(NWorkers, WorkFlow, CollectorPid),
+  spawn(sk_farm_emitter, start, [WorkerPids]).
+  
