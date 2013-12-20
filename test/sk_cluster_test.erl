@@ -1,4 +1,4 @@
--module(sk_decomp_test).
+-module(sk_cluster_test).
 
 
 -include_lib("eunit/include/eunit.hrl").
@@ -7,7 +7,6 @@
 
 
 simple_example_of_decomp_usage_test()->
-
   ?assertSameDataInside( [ {0,3,6},
                            {9,12,15} ],
                          skel:do( [{ cluster,
