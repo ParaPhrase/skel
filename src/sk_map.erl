@@ -47,30 +47,30 @@
 
 -include("skel.hrl").
 
-%% -spec make(workflow()) -> maker_fun().
-%% @doc Initialises an instance of the Map skeleton ready to receive inputs, 
-%% where the number of worker processes is automatic. The function or 
-%% functions to be applied to said inputs are given under `WorkFlow'.
-%% 
-%% A combiner, or recomposition, process is created and acts as a sink for the 
-%% workers. These workers are generated and managed from within a
-%% {@link sk_map_partitioner} process.
+
+%% @doc Initialises an instance of the Map skeleton ready to receive inputs.
+%%
+%% Map creates number of internal workflows, all of theme based on
+%% given `WorkFlow'.  Each recived data is splitted by
+%% {@link sk_map_partitioner} and send to workers, which then send
+%% it back to combiner, or recomposition processes, which acts as sink
+%% for workers.
+%%
+%% The number of workers itself can by determined automaticly, when no
+%% additional parameters are given. Or could be set staticly by the
+%% `NumberOfWorkers' parameter.
+-spec start( Parameters, NextPid ) -> WorkflowPid when
+    Parameters :: { WorkFlow }
+                | { WorkFlow , NumberOfWorkers },
+    WorkFlow :: workflow(),
+    NumberOfWorkers :: pos_integer(),
+    NextPid :: pid(),
+    WorkflowPid :: pid().
+
 start({WorkFlow}, NextPid) ->
   CombinerPid = proc_lib:spawn(sk_map_combiner, start, [NextPid]),
   proc_lib:spawn(sk_map_partitioner, start, [auto, WorkFlow, CombinerPid]);
 
-
-
-
-%% -spec make(workflow(), pos_integer()) -> maker_fun().
-%% @doc Initialises an instance of the Map skeleton ready to receive inputs, 
-%% using a given number of worker processes. This number is specified under 
-%% `NWorkers', and the function or functions to be applied to any and all 
-%% inputs are given by `WorkFlow'.
-%% 
-%% A combiner, or recomposition, process is created, and acts as a sink for 
-%% the workers. These workers are initialised with the specified workflow, and 
-%% their Pids passed to a {@link sk_map_partitioner} process.
 start({WorkFlow, NWorkers}, NextPid) ->
   CombinerPid = proc_lib:spawn(sk_map_combiner, start, [NextPid, NWorkers]),
   WorkerPids = sk_utils:start_workers(NWorkers, WorkFlow, CombinerPid),
