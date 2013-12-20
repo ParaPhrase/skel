@@ -35,7 +35,7 @@
 %% defined function `FilterFun', and are used to check inputs according to 
 %% said function.
 -spec start( Parameters, NextPid ) -> WorkflowPid when
-    Parameters :: { workflow() ,
+    Parameters :: { WorkFlow  :: workflow() ,
                     FilterFun :: filter_fun() },
     NextPid :: pid(),
     WorkflowPid :: pid().
