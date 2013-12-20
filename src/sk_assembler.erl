@@ -12,8 +12,8 @@
 -module(sk_assembler).
 
 -export([
-         make/2
-        ,run/2
+         run/2
+        ,make/2
         ]).
 
 -include("skel.hrl").
@@ -21,6 +21,16 @@
 -ifdef(TEST).
 -compile(export_all).
 -endif.
+
+
+-spec run( workflow(), input()) -> pid().
+%% @doc Function to produce and start a set of processes according to the 
+%% given workflow specification and input.
+run(WorkFlow, Input) when is_list(WorkFlow) ->
+  DrainPid = sk_sink:start_acc(),
+  AssembledWF = make(WorkFlow, DrainPid),
+  sk_source:start(Input, AssembledWF ).
+
 
 -spec make(workflow(), pid() | module()) -> pid() .
 %% @doc Function to produce a set of processes according to the given workflow 
@@ -32,15 +42,6 @@ make(WorkFlow, EndPid) when is_pid(EndPid) ->
   lists:foldr(fun start_item/2,
               EndPid,
               WorkFlow).
-
--spec run( workflow(), input()) -> pid().
-%% @doc Function to produce and start a set of processes according to the 
-%% given workflow specification and input.
-run(WorkFlow, Input) when is_list(WorkFlow) ->
-  DrainPid = sk_sink:start_acc(),
-  AssembledWF = make(WorkFlow, DrainPid),
-  sk_source:start(Input, AssembledWF ).
-
 
 
 start_item( Fun, NextPid ) when is_function(Fun) ->
