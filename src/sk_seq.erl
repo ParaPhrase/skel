@@ -29,28 +29,24 @@
 
 -export([
          start/2
-        ,make/1
+        ,init/2
         ]).
 
 -include("skel.hrl").
 
--ifdef(TEST).
--compile(export_all).
--endif.
 
--spec make(worker_fun())  -> maker_fun().
+-spec start(worker_fun(), pid())  -> pid().
 %% @doc Spawns a worker process performing the function `WorkerFun'. 
 %% Returns an anonymous function that takes the parent process `NextPid'
 %% as an argument. 
-make(WorkerFun) ->
-  fun(NextPid) ->
-    spawn(?MODULE, start, [WorkerFun, NextPid])
-  end.
+start({WorkerFun},NextPid ) ->
+  proc_lib:spawn(?MODULE, init, [WorkerFun, NextPid]).
 
--spec start(worker_fun(), pid()) -> eos.
+
+-spec init(worker_fun(), pid()) -> eos.
 %% @doc Starts the worker process' task. Recursively receives the worker 
 %% function's input, and applies it to said function.
-start(WorkerFun, NextPid) ->
+init(WorkerFun, NextPid) ->
   sk_tracer:t(75, self(), {?MODULE, start}, [{next_pid, NextPid}]),
   DataFun = sk_data:fmap(WorkerFun),
   loop(DataFun, NextPid).
