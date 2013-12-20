@@ -23,18 +23,22 @@
 -endif.
 
 
--spec run( workflow(), input()) -> pid().
+
 %% @doc Function to produce and start a set of processes according to the 
 %% given workflow specification and input.
+-spec run( workflow(), input()) ->
+             pid().
 run(WorkFlow, Input) when is_list(WorkFlow) ->
   DrainPid = sk_sink:start_acc(),
   AssembledWF = make(WorkFlow, DrainPid),
   sk_source:start(Input, AssembledWF ).
 
 
--spec make(workflow(), pid() | module()) -> pid() .
+
 %% @doc Function to produce a set of processes according to the given workflow 
 %% specification.
+-spec make(workflow(), pid() | module()) ->
+              pid() .
 make(WorkFlow, EndModule) when is_atom(EndModule) ->
   DrainPid = sk_sink:start_mod(EndModule),
   make(WorkFlow, DrainPid);

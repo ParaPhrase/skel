@@ -32,8 +32,10 @@
 
 -include("skel.hrl").
 
--spec start( {workflow()}, pid()) -> maker_fun().
+
 %% @doc Produces workers according to the specified workflow.
+-spec start( {workflow()}, pid()) ->
+               pid().
 start({WorkFlow}, NextPid) ->
   sk_assembler:make(WorkFlow, NextPid).
 

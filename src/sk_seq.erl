@@ -35,23 +35,28 @@
 -include("skel.hrl").
 
 
--spec start({worker_fun()}, pid())  -> pid().
-%% @doc Spawns a worker process performing the function `WorkerFun'. 
+
+%% @doc Spawns a worker process performing the function `WorkerFun'.
+-spec start({worker_fun()}, pid()) ->
+               pid().
 start({WorkerFun},NextPid ) ->
   proc_lib:spawn(?MODULE, init, [WorkerFun, NextPid]).
 
 
--spec init(worker_fun(), pid()) -> eos.
 %% @doc Starts the worker process' task. Recursively receives the worker 
 %% function's input, and applies it to said function.
+-spec init(worker_fun(), pid()) ->
+              'eos'.
 init(WorkerFun, NextPid) ->
   sk_tracer:t(75, self(), {?MODULE, start}, [{next_pid, NextPid}]),
   DataFun = sk_data:fmap(WorkerFun),
   loop(DataFun, NextPid).
 
--spec loop( data_fun(), pid()) -> eos.
+
 %% @doc Recursively receives and applies the input to the function `DataFun'. 
 %% Sends the resulting data message to the process `NextPid'.
+-spec loop( data_fun(), pid()) ->
+              'eos'.
 loop(DataFun, NextPid) ->
   receive
     {data,_,_} = DataMessage ->
