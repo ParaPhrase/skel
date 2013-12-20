@@ -27,15 +27,14 @@
 -module(sk_pipe).
 
 -export([
-         make/1
+         start/2
         ]).
 
 -include("skel.hrl").
 
--spec make( workflow()) -> maker_fun().
+-spec start( workflow(), pid()) -> maker_fun().
 %% @doc Produces workers according to the specified workflow. Returns an 
 %% anonymous function taking the Pid of the parent process `NextPid'.
-make(WorkFlow) ->
-  fun(NextPid) ->
-    sk_assembler:make(WorkFlow, NextPid)
-  end.
+start({WorkFlow}, NextPid) ->
+  sk_assembler:make(WorkFlow, NextPid).
+
