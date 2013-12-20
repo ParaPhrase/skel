@@ -29,8 +29,9 @@ make(WorkFlow, EndModule) when is_atom(EndModule) ->
   DrainPid = sk_sink:start_mod(EndModule),
   make(WorkFlow, DrainPid);
 make(WorkFlow, EndPid) when is_pid(EndPid) ->
-  MakeFns = [parse(Section) || Section <- WorkFlow],
-  lists:foldr(fun(MakeFn, Pid) -> MakeFn(Pid) end, EndPid, MakeFns).
+  lists:foldr(fun start_item/2,
+              EndPid,
+              WorkFlow).
 
 -spec run(pid() | workflow(), input()) -> pid().
 %% @doc Function to produce and start a set of processes according to the 
@@ -42,30 +43,26 @@ run(WorkFlow, Input) when is_list(WorkFlow) ->
   AssembledWF = make(WorkFlow, DrainPid),
   run(AssembledWF, Input).
 
--spec parse(wf_item()) -> maker_fun().
-%% @doc Determines the course of action to be taken according to the type of 
-%% workflow specified. Constructs and starts specific skeleton instances.
-parse(Fun) when is_function(Fun, 1) ->
-  parse({seq, Fun});
-parse({seq, Fun}) when is_function(Fun, 1) ->
-  sk_seq:make(Fun);
-parse({pipe, WorkFlow}) ->
-  sk_pipe:make(WorkFlow);
-parse({ord, WorkFlow}) ->
-  sk_ord:make(WorkFlow);
-parse({farm, WorkFlow, NWorkers}) ->
-  sk_farm:make(NWorkers, WorkFlow);
-parse({map, WorkFlow}) ->
-  sk_map:make(WorkFlow);
-parse({map, WorkFlow, NWorkers}) ->
-  sk_map:make(WorkFlow, NWorkers);
-parse({cluster, WorkFlow, Decomp, Recomp}) when is_function(Decomp, 1),
-                                               is_function(Recomp, 1) ->
-  sk_cluster:make(WorkFlow, Decomp, Recomp);
-parse({reduce, Reduce, Decomp}) when is_function(Reduce, 2),
-                                     is_function(Decomp, 1) ->
-  sk_reduce:make(Decomp, Reduce);
-parse({feedback, WorkFlow, Filter}) when is_function(Filter, 1) ->
-  sk_feedback:make(WorkFlow, Filter).
 
+start_item( Fun, NextPid ) when is_function(Fun) ->
+  start_item( { seq, Fun }, NextPid );
+start_item( Item, NextPid ) ->
+  { ItemName, Parameters } = split_item( Item ),
+  ModuleName = item_to_module( ItemName ),
+  ModuleName:start( Parameters, NextPid ).
+
+
+split_item( Item ) ->
+  { erlang:element( 1, Item ),
+    erlang:delete_element( 1, Item)}.
+
+
+item_to_module( seq )      -> sk_seq;
+item_to_module( pipe )     -> sk_pipe;
+item_to_module( ord )      -> sk_ord;
+item_to_module( farm )     -> sk_farm;
+item_to_module( cluster )  -> sk_cluster;
+item_to_module( map )      -> sk_map;
+item_to_module( reduce )   -> sk_reduce;
+item_to_module( feedback ) -> sk_feedback.
 
