@@ -26,9 +26,11 @@
 
 -include("skel.hrl").
 
--spec start(pos_integer(), workflow()) -> maker_fun().
-%% @doc Initialises a Farm skeleton given the number of workers and their 
-%% inner-workflows, respectively.
+
+%% @doc Initialises a Farm skeleton given the inner workflow and number of
+%% workers, respectively.
+-spec start({workflow(), pos_integer()}, pid() ) ->
+               maker_fun().
 start({ WorkFlow , NWorkers}, NextPid) ->
   CollectorPid = spawn(sk_farm_collector, start, [NWorkers, NextPid]),
   WorkerPids = sk_utils:start_workers(NWorkers, WorkFlow, CollectorPid),
