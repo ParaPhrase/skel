@@ -36,8 +36,7 @@ make(WorkFlow, EndPid) when is_pid(EndPid) ->
 %% @doc Function to produce and start a set of processes according to the 
 %% given workflow specification and input.
 run(WorkFlowPid, Input) when is_pid(WorkFlowPid) ->
-  Feeder = sk_source:make(Input),
-  Feeder(WorkFlowPid);
+  sk_source:start(Input, WorkFlowPid );
 run(WorkFlow, Input) when is_list(WorkFlow) ->
   DrainPid = sk_sink:start_acc(),
   AssembledWF = make(WorkFlow, DrainPid),

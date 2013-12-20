@@ -17,6 +17,7 @@
 -export([
          make/1
         ,start/2
+        ,init/2
         ]).
 
 -include("skel.hrl").
@@ -45,12 +46,16 @@ make(Input) ->
     spawn(?MODULE, start, [Input, Pid])
   end.
 
+-spec start(input(), pid() | atom ()) -> pid().
+start( Input, NextPid ) ->
+  proc_lib:spawn( ?MODULE, init, [ Input, NextPid]).
+
 %% @doc Transmits each input in <tt>Input</tt> to the process <tt>NextPid</tt>.
 %% @todo add documentation for the callback loop
--spec start(input(), pid()) -> 'eos'.
-start(Input, NextPid) when is_list(Input) ->
+-spec init(input(), pid() | atom() ) -> 'eos'.
+init(Input, NextPid) when is_list(Input) ->
   list_loop(Input, NextPid);
-start(InputMod, NextPid) when is_atom(InputMod) ->
+init(InputMod, NextPid) when is_atom(InputMod) ->
   case InputMod:init() of
     {ok, State} -> callback_loop(InputMod, State, NextPid);
     {no_inputs, State}  ->
