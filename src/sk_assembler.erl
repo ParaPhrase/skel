@@ -39,7 +39,7 @@ run(WorkFlowPid, Input) when is_pid(WorkFlowPid) ->
   Feeder = sk_source:make(Input),
   Feeder(WorkFlowPid);
 run(WorkFlow, Input) when is_list(WorkFlow) ->
-  DrainPid = (sk_sink:make())(self()),
+  DrainPid = sk_sink:start_acc(),
   AssembledWF = make(WorkFlow, DrainPid),
   run(AssembledWF, Input).
 

@@ -19,6 +19,7 @@
 -export([
          make/0
         ,start_acc/1
+        ,start_acc/0
         ,make/1
         ,start_mod/2
         ,start_mod/1
@@ -58,6 +59,12 @@ make(OutputMod) ->
   fun(Pid) ->
     spawn(?MODULE, start_mod, [OutputMod, Pid])
   end.
+
+
+%% @doc Starts accumulator process.
+-spec start_acc() -> pid().
+start_acc() ->
+  proc_lib:spawn( ?MODULE, start_acc, [ self() ]).
 
 -spec start_acc(pid()) -> 'eos'.
 %% @doc Sets the sink process to receive messages from other processes.
