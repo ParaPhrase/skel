@@ -26,7 +26,7 @@
 %% @doc Function to produce a set of processes according to the given workflow 
 %% specification.
 make(WorkFlow, EndModule) when is_atom(EndModule) ->
-  DrainPid = (sk_sink:make(EndModule))(self()),
+  DrainPid = sk_sink:start_mod(EndModule),
   make(WorkFlow, DrainPid);
 make(WorkFlow, EndPid) when is_pid(EndPid) ->
   MakeFns = [parse(Section) || Section <- WorkFlow],

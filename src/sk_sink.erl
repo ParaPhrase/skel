@@ -21,6 +21,7 @@
         ,start_acc/1
         ,make/1
         ,start_mod/2
+        ,start_mod/1
         ]).
 
 -include("skel.hrl").
@@ -77,6 +78,9 @@ loop_acc(NextPid, Results) ->
       sk_tracer:t(75, self(), {?MODULE, system}, [{msg, eos}]),
       forward(Results, NextPid)
   end.
+
+start_mod( OutputMod ) ->
+  proc_lib:spawn(?MODULE, start_mod, [ OutputMod, self()]).
 
 -spec start_mod(module(), pid()) -> 'eos'.
 %% @doc Initiates loop to receive messages from child processes, passing 
