@@ -41,7 +41,7 @@
     WorkflowPid :: pid().
 
 start({WorkFlow}, NextPid ) ->
-  ReordererPid = spawn(sk_ord_reorderer, start, [NextPid]),
+  ReordererPid = proc_lib:spawn(sk_ord_reorderer, start, [NextPid]),
   WorkerPid = sk_utils:start_worker(WorkFlow, ReordererPid),
-  spawn(sk_ord_tagger, start, [WorkerPid]).
+  proc_lib:spawn(sk_ord_tagger, start, [WorkerPid]).
 
