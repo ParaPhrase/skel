@@ -19,18 +19,18 @@
 -module(sk_reduce).
 
 -export([
-         make/2
+         start/2
         ]).
 
 -include("skel.hrl").
 
--spec make(decomp_fun(), reduce_fun()) -> fun((pid()) -> pid()).
+%% -spec make(decomp_fun(), reduce_fun()) -> fun((pid()) -> pid()).
 %% @doc Readies an instance of the Reduce skeleton. Uses the developer-defined 
 %% decomposition and recomposition functions `Decomp' and `Reduce', 
 %% respectively. Returns an anonymous function waiting for the sink process 
 %% `NextPid'.
-make(Decomp, Reduce) ->
-  fun(NextPid) ->
-    spawn(sk_reduce_decomp, start, [Decomp, Reduce, NextPid])
-  end.
+start({Reduce, Decomp}, NextPid ) ->
+  io:format("start reduce~n~n"),
+  proc_lib:spawn(sk_reduce_decomp, start, [Decomp, Reduce, NextPid]).
+
 
