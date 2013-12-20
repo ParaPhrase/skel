@@ -26,8 +26,6 @@
 
 -type filter_fun()  :: fun((any())        -> boolean()). % Any function that determines whether an input matches one or more given criteria.
 
--type maker_fun()   :: fun((pid())        -> pid()). % Any function that spawns a process.
-
 
 
 
