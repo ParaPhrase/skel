@@ -35,8 +35,11 @@
 
 %% @doc Constructs an Ord skeleton wrapper to ensure the outputs of the 
 %% specified workflow are in the same order as that of its inputs.
--spec start(workflow() , pid() ) ->
-               pid().
+-spec start( Parameters, NextPid ) -> WorkflowPid when
+    Parameters :: { Workflow :: workflow() },
+    NextPid :: pid(),
+    WorkflowPid :: pid().
+
 start({WorkFlow}, NextPid ) ->
   ReordererPid = spawn(sk_ord_reorderer, start, [NextPid]),
   WorkerPid = sk_utils:start_worker(WorkFlow, ReordererPid),

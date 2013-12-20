@@ -29,8 +29,12 @@
 
 %% @doc Initialises a Farm skeleton given the inner workflow and number of
 %% workers, respectively.
--spec start({workflow(), pos_integer()}, pid() ) ->
-               maker_fun().
+-spec start( Parameters, NextPid ) -> WorkflowPid when
+    Parameters :: { Workflow :: workflow(),
+                    NumberOfWorkers :: pos_integer() },
+    NextPid :: pid(),
+    WorkflowPid :: pid().
+
 start({ WorkFlow , NWorkers}, NextPid) ->
   CollectorPid = spawn(sk_farm_collector, start, [NWorkers, NextPid]),
   WorkerPids = sk_utils:start_workers(NWorkers, WorkFlow, CollectorPid),
