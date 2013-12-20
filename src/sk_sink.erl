@@ -72,12 +72,14 @@ loop_acc(NextPid, Results) ->
 
 %% @doc Creates the process to which the final results are sent using the
 %% specified module <tt>OutputMod</tt>.
+-spec start_mod( module() ) -> pid().
 start_mod( OutputMod ) ->
   proc_lib:spawn(?MODULE, start_mod, [ OutputMod, self()]).
 
--spec start_mod(module(), pid()) -> 'eos'.
+
 %% @doc Initiates loop to receive messages from child processes, passing 
 %% results to the given module as appropriate.
+-spec start_mod(module(), pid()) -> 'eos'.
 start_mod(OutputMod, NextPid) ->
   case OutputMod:init() of
     {ok, State} -> loop_mod(OutputMod, State, NextPid);
