@@ -17,10 +17,8 @@
 -module(sk_sink).
 
 -export([
-         make/0
-        ,start_acc/1
+         start_acc/1
         ,start_acc/0
-        ,make/1
         ,start_mod/2
         ,start_mod/1
         ]).
@@ -42,26 +40,10 @@
 -callback terminate(State :: term()) ->
     term().
 
--spec make() -> maker_fun().
-%% @doc Creates the process to which the final results are sent. Returns an 
-%% anonymous function which takes the <tt>Pid</tt> of the process it is linked 
-%% to.
-make() ->
-  fun(Pid) ->
-    spawn(?MODULE, start_acc, [Pid])
-  end.
-
--spec make(module()) -> maker_fun().
-%% @doc Creates the process to which the final results are sent using the 
-%% specified module <tt>OutputMod</tt>. Returns an anonymous function, taking 
-%% the <tt>Pid</tt> of the process it is linked to.
-make(OutputMod) ->
-  fun(Pid) ->
-    spawn(?MODULE, start_mod, [OutputMod, Pid])
-  end.
 
 
-%% @doc Starts accumulator process.
+%% @doc Starts accumulator process.  Creates the process to which the
+%%  final results are sent.
 -spec start_acc() -> pid().
 start_acc() ->
   proc_lib:spawn( ?MODULE, start_acc, [ self() ]).
@@ -86,6 +68,10 @@ loop_acc(NextPid, Results) ->
       forward(Results, NextPid)
   end.
 
+
+
+%% @doc Creates the process to which the final results are sent using the
+%% specified module <tt>OutputMod</tt>.
 start_mod( OutputMod ) ->
   proc_lib:spawn(?MODULE, start_mod, [ OutputMod, self()]).
 
