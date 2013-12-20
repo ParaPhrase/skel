@@ -15,16 +15,12 @@
 -module(sk_source).
 
 -export([
-         make/1
-        ,start/2
+         start/2
         ,init/2
         ]).
 
 -include("skel.hrl").
 
--ifdef(TEST).
--compile(export_all).
--endif.
 
 -callback init() ->
     {ok, State :: term()} |
@@ -38,13 +34,6 @@
 -callback terminate(State :: term()) ->
     ok.
 
-%% @doc Creates a new child process using Input, given the parent process 
-%% <tt>Pid</tt>.
--spec make(input()) -> maker_fun().
-make(Input) ->
-  fun(Pid) ->
-    spawn(?MODULE, start, [Input, Pid])
-  end.
 
 -spec start(input(), pid() | atom ()) -> pid().
 start( Input, NextPid ) ->
