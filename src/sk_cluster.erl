@@ -40,13 +40,15 @@
 
 
 
--spec start({workflow(), decomp_fun()}, recomp_fun()) -> fun((pid()) -> pid()).
+
 %% @doc Initialises the Cluster wrapper using both the developer-defined 
 %% functions under `Decomp' and `Recomp' as decomposition and recomposition 
 %% functions respectively. 
 %% 
 %% Inputs are decomposed, sent through the specified (inner) workflow, and 
 %% then recomposed to be delivered as output.
+-spec start({workflow(), decomp_fun(), recomp_fun()}, pid()) ->
+               pid().
 start({WorkFlow, Decomp, Recomp}, NextPid) ->
     RecompPid = proc_lib:spawn(sk_cluster_recomp, start, [Recomp, NextPid]),
     WorkerPid = sk_utils:start_worker(WorkFlow, RecompPid),
