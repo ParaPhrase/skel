@@ -24,11 +24,17 @@
 
 -include("skel.hrl").
 
-%% -spec make(decomp_fun(), reduce_fun()) -> fun((pid()) -> pid()).
+
 %% @doc Readies an instance of the Reduce skeleton. Uses the developer-defined 
 %% decomposition and recomposition functions `Decomp' and `Reduce', 
 %% respectively. Returns an anonymous function waiting for the sink process 
 %% `NextPid'.
+-spec start( Parameters, NextPid ) -> WorkflowPid when
+    Parameters :: { Reduce :: reduce_fun(),
+                    Decomp :: decomp_fun() },
+    NextPid :: pid(),
+    WorkflowPid :: pid().
+
 start({Reduce, Decomp}, NextPid ) ->
   io:format("start reduce~n~n"),
   proc_lib:spawn(sk_reduce_decomp, start, [Decomp, Reduce, NextPid]).
