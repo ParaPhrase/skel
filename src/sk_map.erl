@@ -41,11 +41,13 @@
 
 -module(sk_map).
 
--export([make/1, make/2]).
+-export([
+         start/2
+        ]).
 
 -include("skel.hrl").
 
--spec make(workflow()) -> maker_fun().
+%% -spec make(workflow()) -> maker_fun().
 %% @doc Initialises an instance of the Map skeleton ready to receive inputs, 
 %% where the number of worker processes is automatic. The function or 
 %% functions to be applied to said inputs are given under `WorkFlow'.
@@ -53,14 +55,14 @@
 %% A combiner, or recomposition, process is created and acts as a sink for the 
 %% workers. These workers are generated and managed from within a
 %% {@link sk_map_partitioner} process.
-make(WorkFlow) ->
-  fun(NextPid) ->
-    CombinerPid = spawn(sk_map_combiner, start, [NextPid]),
-    spawn(sk_map_partitioner, start, [auto, WorkFlow, CombinerPid])
-  end.
+start({WorkFlow}, NextPid) ->
+  CombinerPid = proc_lib:spawn(sk_map_combiner, start, [NextPid]),
+  proc_lib:spawn(sk_map_partitioner, start, [auto, WorkFlow, CombinerPid]);
 
 
--spec make(workflow(), pos_integer()) -> maker_fun().
+
+
+%% -spec make(workflow(), pos_integer()) -> maker_fun().
 %% @doc Initialises an instance of the Map skeleton ready to receive inputs, 
 %% using a given number of worker processes. This number is specified under 
 %% `NWorkers', and the function or functions to be applied to any and all 
@@ -69,9 +71,8 @@ make(WorkFlow) ->
 %% A combiner, or recomposition, process is created, and acts as a sink for 
 %% the workers. These workers are initialised with the specified workflow, and 
 %% their Pids passed to a {@link sk_map_partitioner} process.
-make(WorkFlow, NWorkers) ->
-  fun(NextPid) ->
-    CombinerPid = spawn(sk_map_combiner, start, [NextPid, NWorkers]),
-    WorkerPids = sk_utils:start_workers(NWorkers, WorkFlow, CombinerPid),
-    spawn(sk_map_partitioner, start, [man, WorkerPids, CombinerPid])
-  end.
+start({WorkFlow, NWorkers}, NextPid) ->
+  CombinerPid = proc_lib:spawn(sk_map_combiner, start, [NextPid, NWorkers]),
+  WorkerPids = sk_utils:start_workers(NWorkers, WorkFlow, CombinerPid),
+  proc_lib:spawn(sk_map_partitioner, start, [man, WorkerPids, CombinerPid]).
+  
