@@ -52,7 +52,6 @@ start(man, WorkerPids, CombinerPid) when is_pid(hd(WorkerPids)) ->
   sk_tracer:t(75, self(), {?MODULE, start}, [{combiner, CombinerPid}]),
   loop(decomp_by(), CombinerPid, WorkerPids).
 
-
 -spec loop(data_decomp_fun(), workflow(), pid(), [pid()]) -> 'eos'.
 %% @doc Recursively receives inputs as messages, which are decomposed, and the 
 %% resulting messages sent to individual workers. `loop/4' is used in place of 

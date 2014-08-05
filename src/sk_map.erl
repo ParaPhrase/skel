@@ -41,7 +41,7 @@
 
 -module(sk_map).
 
--export([make/1, make/2]).
+-export([make/1, make/2, make_hyb/4]).
 
 -include("skel.hrl").
 
@@ -75,3 +75,20 @@ make(WorkFlow, NWorkers) ->
     WorkerPids = sk_utils:start_workers(NWorkers, WorkFlow, CombinerPid),
     spawn(sk_map_partitioner, start, [man, WorkerPids, CombinerPid])
   end.
+
+-spec make_hyb(workflow(), workflow(), pos_integer(), pos_integer()) -> maker_fun().
+%% @doc Initialises an instance of the Hybrid Map skeleton ready to receive inputs, 
+%% using a given number of CPU and GPU worker processes. These numbers are specified under 
+%% `NCPUWorkers' and `NGPUWorkers', and the CPU and GPU versions of the function
+%% to be applied to inputs are given by `WorkFlowCPU' and `WorkFlowGPU'.
+%% 
+%% A combiner, or recomposition, process is created, and acts as a sink for 
+%% the workers. These workers are initialised with the specified workflow, and 
+%% their Pids passed to a {@link sk_map_partitioner} process.
+make_hyb(WorkFlowCPU, WorkFlowGPU, NCPUWorkers, NGPUWorkers) ->
+  fun(NextPid) ->
+    CombinerPid = spawn(sk_map_combiner, start, [NextPid, NCPUWorkers+NGPUWorkers]),
+    WorkerPids = sk_utils:start_workers_hyb(NCPUWorkers, NGPUWorkers, WorkFlowCPU, WorkFlowGPU, CombinerPid),
+    spawn(sk_map_partitioner, start, [man, WorkerPids, CombinerPid])
+  end.
+

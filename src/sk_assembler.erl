@@ -56,10 +56,14 @@ parse({ord, WorkFlow}) ->
   sk_ord:make(WorkFlow);
 parse({farm, WorkFlow, NWorkers}) ->
   sk_farm:make(NWorkers, WorkFlow);
+parse({hyb_farm, WorkFlowCPU, WorkFlowGPU, NCPUWorkers, NGPUWorkers}) ->
+  sk_farm:make_hyb(NCPUWorkers, NGPUWorkers, WorkFlowCPU, WorkFlowGPU);
 parse({map, WorkFlow}) ->
   sk_map:make(WorkFlow);
 parse({map, WorkFlow, NWorkers}) ->
   sk_map:make(WorkFlow, NWorkers);
+parse({hyb_map, WorkFlowCPU, WorkFlowGPU, NCPUWorkers, NGPUWorkers}) ->
+  sk_map:make_hyb(WorkFlowCPU, WorkFlowGPU, NCPUWorkers, NGPUWorkers);
 parse({cluster, WorkFlow, Decomp, Recomp}) when is_function(Decomp, 1),
                                                is_function(Recomp, 1) ->
   sk_cluster:make(WorkFlow, Decomp, Recomp);
