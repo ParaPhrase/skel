@@ -39,16 +39,17 @@
     WorkflowPid :: pid().
 
 start({WorkFlow , NWorkers}, NextPid) ->
-  CollectorPid = spawn(sk_farm_collector, start, [NWorkers, NextPid]),
+  CollectorPid = proc_lib:spawn(sk_farm_collector, start, [NWorkers, NextPid]),
   WorkerPids = sk_utils:start_workers(NWorkers, WorkFlow, CollectorPid),
-  spawn(sk_farm_emitter, start, [WorkerPids]);
+  proc_lib:spawn(sk_farm_emitter, start, [WorkerPids]);
 
 start({WorkFlowCPU, NCPUWorkers, WorkFlowGPU, NGPUWorkers}, NextPid) ->
-  CollectorPid = spawn(sk_farm_collector, start, [NCPUWorkers + NGPUWorkers,
-                                                  NextPid]),
+  CollectorPid = proc_lib:spawn(sk_farm_collector,
+                                start, [NCPUWorkers + NGPUWorkers,
+                                        NextPid]),
   WorkerPids = sk_utils:start_workers_hyb(NCPUWorkers,
                                           NGPUWorkers,
                                           WorkFlowCPU,
                                           WorkFlowGPU,
                                           CollectorPid),
-  spawn(sk_farm_emitter, start, [WorkerPids]).
+  proc_lib:spawn(sk_farm_emitter, start, [WorkerPids]).

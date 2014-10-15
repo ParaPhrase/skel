@@ -100,4 +100,4 @@ start({WorkFlow, NWorkers}, NextPid) ->
 start({WorkFlowCPU, NCPUWorkers, WorkFlowGPU, NGPUWorkers}, NextPid) ->
   CombinerPid = spawn(sk_map_combiner, start, [NextPid, NCPUWorkers+NGPUWorkers]),
   WorkerPids = sk_utils:start_workers_hyb(NCPUWorkers, NGPUWorkers, WorkFlowCPU, WorkFlowGPU, CombinerPid),
-  spawn(sk_map_partitioner, start, [man, WorkerPids, CombinerPid]).
+  proc_lib:spawn(sk_map_partitioner, start, [man, WorkerPids, CombinerPid]).

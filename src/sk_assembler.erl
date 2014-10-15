@@ -50,7 +50,7 @@ make(WorkFlow, EndPid) when is_pid(EndPid) ->
 start_item( Fun, NextPid ) when is_function(Fun) ->
   start_item( { seq, Fun }, NextPid );
 start_item( Item, NextPid ) ->
- { ItemName, Parameters } = split_item( Item ),
+  {ItemName, Parameters } = split_item( Item ),
   ModuleName = item_to_module( ItemName ),
   ModuleName:start( Parameters, NextPid ).
 
