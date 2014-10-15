@@ -24,7 +24,7 @@
 
 
 
-%% @doc Function to produce and start a set of processes according to the 
+%% @doc Function to produce and start a set of processes according to the
 %% given workflow specification and input.
 -spec run( workflow(), input()) ->
              pid().
@@ -34,8 +34,7 @@ run(WorkFlow, Input) when is_list(WorkFlow) ->
   sk_source:start(Input, AssembledWF ).
 
 
-
-%% @doc Function to produce a set of processes according to the given workflow 
+%% @doc Function to produce a set of processes according to the given workflow
 %% specification.
 -spec make(workflow(), pid() | module()) ->
               pid() .
@@ -51,7 +50,7 @@ make(WorkFlow, EndPid) when is_pid(EndPid) ->
 start_item( Fun, NextPid ) when is_function(Fun) ->
   start_item( { seq, Fun }, NextPid );
 start_item( Item, NextPid ) ->
-  { ItemName, Parameters } = split_item( Item ),
+ { ItemName, Parameters } = split_item( Item ),
   ModuleName = item_to_module( ItemName ),
   ModuleName:start( Parameters, NextPid ).
 
@@ -65,8 +64,9 @@ item_to_module( seq )      -> sk_seq;
 item_to_module( pipe )     -> sk_pipe;
 item_to_module( ord )      -> sk_ord;
 item_to_module( farm )     -> sk_farm;
+item_to_module( hyb_farm ) -> sk_farm;
 item_to_module( cluster )  -> sk_cluster;
 item_to_module( map )      -> sk_map;
+item_to_module( hyb_map )  -> sk_map;
 item_to_module( reduce )   -> sk_reduce;
 item_to_module( feedback ) -> sk_feedback.
-

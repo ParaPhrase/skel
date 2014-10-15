@@ -9,13 +9,13 @@
 %%% sent to one of `n' replicas of the inner skeleton for processing.
 %%%
 %%% === Example ===
-%%% 
-%%% 	```skel:run([{farm, [{seq, fun ?MODULE:p1/1}], 10}], Input)'''
-%%% 
-%%% 	In this simple example, we produce a farm with ten workers to run the 
-%%% sequential, developer-defined function `p/1' using the list of inputs 
+%%%
+%%%   ```skel:run([{farm, [{seq, fun ?MODULE:p1/1}], 10}], Input)'''
+%%%
+%%%   In this simple example, we produce a farm with ten workers to run the
+%%% sequential, developer-defined function `p/1' using the list of inputs
 %%% `Input'.
-%%% 
+%%%
 %%% @end
 %%%----------------------------------------------------------------------------
 -module(sk_farm).
@@ -26,17 +26,29 @@
 
 -include("skel.hrl").
 
-
 %% @doc Initialises a Farm skeleton given the inner workflow and number of
 %% workers, respectively.
 -spec start( Parameters, NextPid ) -> WorkflowPid when
-    Parameters :: { Workflow :: workflow(),
-                    NumberOfWorkers :: pos_integer() },
+    Parameters :: {Workflow :: workflow(),
+                   NumberOfWorkers :: pos_integer() }
+                | {CPUWorkflowCPUWorkflow :: workflow(),
+                   GPUNumberOfWorkers :: pos_integer(),
+                   GPUWorkflow :: workflow(),
+                   GPUNumberOfWorkers :: pos_integer()},
     NextPid :: pid(),
     WorkflowPid :: pid().
 
-start({ WorkFlow , NWorkers}, NextPid) ->
+start({WorkFlow , NWorkers}, NextPid) ->
   CollectorPid = spawn(sk_farm_collector, start, [NWorkers, NextPid]),
   WorkerPids = sk_utils:start_workers(NWorkers, WorkFlow, CollectorPid),
+  spawn(sk_farm_emitter, start, [WorkerPids]);
+
+start({WorkFlowCPU, NCPUWorkers, WorkFlowGPU, NGPUWorkers}, NextPid) ->
+  CollectorPid = spawn(sk_farm_collector, start, [NCPUWorkers + NGPUWorkers,
+                                                  NextPid]),
+  WorkerPids = sk_utils:start_workers_hyb(NCPUWorkers,
+                                          NGPUWorkers,
+                                          WorkFlowCPU,
+                                          WorkFlowGPU,
+                                          CollectorPid),
   spawn(sk_farm_emitter, start, [WorkerPids]).
-  

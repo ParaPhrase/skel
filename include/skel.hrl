@@ -9,9 +9,11 @@
                    | {pipe,     workflow()}
                    | {ord,      workflow()}
                    | {farm,     workflow(), pos_integer()}
+                   | {hyb_farm, workflow(), workflow(), pos_integer(), pos_integer()}
                    | {cluster,  workflow(), decomp_fun(), recomp_fun()}
                    | {map,      workflow()}
                    | {map,      workflow(), pos_integer()}
+                   | {hyb_map,  workflow(), workflow(), pos_integer(), pos_integer()}
                    | {reduce,   reduce_fun(), decomp_fun()}
                    | {feedback, workflow(), filter_fun()}.
 % Workflow items (skeletons) and their content. 
