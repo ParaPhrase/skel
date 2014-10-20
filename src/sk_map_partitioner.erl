@@ -37,7 +37,7 @@
 -include("skel.hrl").
 
 
--spec start(atom(), workflow() | [pid()], pid()) -> 'eos'.
+-spec start(atom(), workflow(), pid()) -> pid().
 %% @doc Starts the recursive partitioning of inputs. 
 %% 
 %% If the number of workers to be used is specified, a list of Pids for those 
@@ -57,12 +57,13 @@ start(auto, WorkFlow, CombinerPid) ->
   sk_tracer:t(75, self(), {?MODULE, start}, [{combiner, CombinerPid}]),
   proc_lib:spawn( ?MODULE, loop_auto, [decomp_by(), WorkFlow, CombinerPid, []]).
 
+-spec start(atom(), workflow(), pos_integer(), pid()) -> pid().
 start(man, WorkFlow, NWorkers, CombinerPid) ->
   WorkerPids = sk_utils:start_workers(NWorkers, WorkFlow, CombinerPid),
   sk_tracer:t(75, self(), {?MODULE, start}, [{combiner, CombinerPid}]),
   proc_lib:spawn(?MODULE, loop, [decomp_by(), WorkerPids]).
 
--spec start( pos_integer(), pos_integer(), workflow(), workflow()) -> pid().
+-spec start( pos_integer(), pos_integer(), workflow(), workflow(), pid()) -> pid().
 start(NCPUWorkers, NGPUWorkers, WorkFlowCPU, WorkFlowGPU, CombinerPid) ->
   sk_tracer:t(75, self(), {?MODULE, start}, [{combiner, CombinerPid}]),
   WorkerPids = sk_utils:start_workers_hyb(NCPUWorkers, NGPUWorkers, WorkFlowCPU, WorkFlowGPU, CombinerPid),
