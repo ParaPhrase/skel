@@ -17,10 +17,10 @@
 -module(sk_sink).
 
 -export([
-         make/0
-        ,start_acc/1
-        ,make/1
+         start_acc/1
+        ,start_acc/0
         ,start_mod/2
+        ,start_mod/1
         ]).
 
 -include("skel.hrl").
@@ -40,23 +40,13 @@
 -callback terminate(State :: term()) ->
     term().
 
--spec make() -> maker_fun().
-%% @doc Creates the process to which the final results are sent. Returns an 
-%% anonymous function which takes the <tt>Pid</tt> of the process it is linked 
-%% to.
-make() ->
-  fun(Pid) ->
-    spawn(?MODULE, start_acc, [Pid])
-  end.
 
--spec make(module()) -> maker_fun().
-%% @doc Creates the process to which the final results are sent using the 
-%% specified module <tt>OutputMod</tt>. Returns an anonymous function, taking 
-%% the <tt>Pid</tt> of the process it is linked to.
-make(OutputMod) ->
-  fun(Pid) ->
-    spawn(?MODULE, start_mod, [OutputMod, Pid])
-  end.
+
+%% @doc Starts accumulator process.  Creates the process to which the
+%%  final results are sent.
+-spec start_acc() -> pid().
+start_acc() ->
+  proc_lib:spawn( ?MODULE, start_acc, [ self() ]).
 
 -spec start_acc(pid()) -> 'eos'.
 %% @doc Sets the sink process to receive messages from other processes.
@@ -78,9 +68,18 @@ loop_acc(NextPid, Results) ->
       forward(Results, NextPid)
   end.
 
--spec start_mod(module(), pid()) -> 'eos'.
+
+
+%% @doc Creates the process to which the final results are sent using the
+%% specified module <tt>OutputMod</tt>.
+-spec start_mod( module() ) -> pid().
+start_mod( OutputMod ) ->
+  proc_lib:spawn(?MODULE, start_mod, [ OutputMod, self()]).
+
+
 %% @doc Initiates loop to receive messages from child processes, passing 
 %% results to the given module as appropriate.
+-spec start_mod(module(), pid()) -> 'eos'.
 start_mod(OutputMod, NextPid) ->
   case OutputMod:init() of
     {ok, State} -> loop_mod(OutputMod, State, NextPid);

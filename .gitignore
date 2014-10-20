@@ -6,3 +6,5 @@ results
 *.log
 .otp.plt
 .skel.plt
+.eunit/*
+*.*~

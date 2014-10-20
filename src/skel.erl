@@ -16,7 +16,7 @@
 
 -include("skel.hrl").
 
--spec run(workflow(), input()) -> pid().
+
 %% @doc Primary entry-point function to the Skel library. Runs a specified 
 %% workflow passing <tt>Input</tt> as input. Does not receive or return any
 %% output from the workflow.
@@ -27,10 +27,12 @@
 %%    Here, skel runs the function <tt>p</tt> on all items in the 
 %%    list <tt>Images</tt> using the Sequential Function wrapper.
 %%
+-spec run(workflow(), input()) ->
+             pid().
 run(WorkFlow, Input) ->
   sk_assembler:run(WorkFlow, Input).
 
--spec do(workflow(), list()) -> list().
+
 %% @doc The second entry-point function to the Skel library. This function 
 %% <em>does</em> receive and return the results of the given workflow.
 %% 
@@ -42,6 +44,8 @@ run(WorkFlow, Input) ->
 %%      respectively. The result for which is returned, and so can be printed 
 %%      or otherwise used.
 %%
+-spec do(workflow(), list()) ->
+            list().
 do(WorkFlow, Input) ->
   run(WorkFlow, Input),
   receive

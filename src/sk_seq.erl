@@ -29,35 +29,34 @@
 
 -export([
          start/2
-        ,make/1
+        ,init/2
         ]).
 
 -include("skel.hrl").
 
--ifdef(TEST).
--compile(export_all).
--endif.
 
--spec make(worker_fun())  -> skel:maker_fun().
-%% @doc Spawns a worker process performing the function `WorkerFun'. 
-%% Returns an anonymous function that takes the parent process `NextPid'
-%% as an argument. 
-make(WorkerFun) ->
-  fun(NextPid) ->
-    spawn(?MODULE, start, [WorkerFun, NextPid])
-  end.
 
--spec start(worker_fun(), pid()) -> eos.
+%% @doc Spawns a worker process performing the function `WorkerFun'.
+-spec start({worker_fun()}, pid()) ->
+               pid().
+start({WorkerFun},NextPid ) ->
+  proc_lib:spawn(?MODULE, init, [WorkerFun, NextPid]).
+
+
 %% @doc Starts the worker process' task. Recursively receives the worker 
 %% function's input, and applies it to said function.
-start(WorkerFun, NextPid) ->
+-spec init(worker_fun(), pid()) ->
+              'eos'.
+init(WorkerFun, NextPid) ->
   sk_tracer:t(75, self(), {?MODULE, start}, [{next_pid, NextPid}]),
   DataFun = sk_data:fmap(WorkerFun),
   loop(DataFun, NextPid).
 
--spec loop(skel:data_fun(), pid()) -> eos.
+
 %% @doc Recursively receives and applies the input to the function `DataFun'. 
 %% Sends the resulting data message to the process `NextPid'.
+-spec loop( data_fun(), pid()) ->
+              'eos'.
 loop(DataFun, NextPid) ->
   receive
     {data,_,_} = DataMessage ->

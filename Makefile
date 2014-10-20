@@ -1,7 +1,7 @@
-.PHONY : compile console typecheck typer clean tutorial
 
 all: compile
 
+.PHONY: clean
 clean:
 	@./rebar clean
 	@rm -f doc/skel.aux doc/skel.bbl doc/skel.blg doc/skel.fdb_latexmk doc/skel.fls
@@ -11,23 +11,41 @@ clean:
 	@rm -f doc/*.html doc/*.css doc/edoc-info doc/erlang.png
 	@rm -f tutorial/bin/*.html tutorial/bin/*.png
 
-compile: src/*.erl
+.PHONY: compile
+compile:
 	@./rebar compile
 
+
+.PHONY: console
 console: compile
 	@exec erl -args_file ./priv/default.args
+
 
 examples: compile
 	@echo "==> skel (examples)"
 	@erlc +debug_info -I include -o ebin examples/*.erl
 
-typecheck: compile .skel.plt
-	@echo "==> skel (typecheck)"
-	@dialyzer --no_check_plt --plt ./.skel.plt -c ebin -Wrace_conditions
 
-typer: compile .skel.plt
+.PHONY: typecheck
+typecheck: compile .otp.plt
+	@echo "==> skel (typecheck)"
+	@dialyzer --no_check_plt --no_native --plt ./.otp.plt -c ebin -Wrace_conditions
+
+
+.PHONY: typer
+typer: compile .otp.plt
 	@echo "==> skel (typer)"
-	@typer --plt ./.skel.plt --show -I include -pa ebin -r src
+	@typer --plt ./.otp.plt --show -I include -pa ebin -r src
+
+
+.PHONY: eunit
+eunit: compile
+	@./rebar skip_deps=true eunit
+
+
+.PHONY: test_all
+test_all: eunit typecheck
+
 
 pdf: doc/skel.pdf
 	@echo "==> skel (pdf)"
@@ -47,10 +65,6 @@ skel.tar.gz: compile
 	@echo "==> otp (plt) # This takes a while, go grab a coffee"
 	@dialyzer --build_plt --output_plt ./.otp.plt --apps erts kernel stdlib debugger et tools
 
-.skel.plt: .otp.plt compile
-	@echo "==> skel (plt)"
-	@dialyzer --add_to_plt --plt ./.otp.plt --output_plt ./.skel.plt -c ebin
-
 docs: compile
 	@rm -f doc/*.html doc/*.css doc/edoc-info doc/erlang.png
 	@./rebar doc
@@ -69,6 +83,7 @@ md: docs
 cleanmd:
 	@rm -f tutorial/bin/*.html
 
+.PHONY: tutorial
 # Linux variant? (xdg-open)
 tutorial: md
 	@open -a /Applications/Safari.app tutorial/bin/index.html

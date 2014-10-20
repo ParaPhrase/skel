@@ -23,22 +23,27 @@
 -module(sk_feedback).
 
 -export([
-         make/2
+         start/2
         ]).
 
 -include("skel.hrl").
 
--spec make(workflow(), filter_fun()) -> maker_fun().
+
 %% @doc Initialises a Feedback skeleton.
 %% 
 %% Constraint-checking filter processes are produced using the developer-
 %% defined function `FilterFun', and are used to check inputs according to 
 %% said function.
-make(WorkFlow, FilterFun) ->
-  fun(NextPid) ->
+-spec start( Parameters, NextPid ) -> WorkflowPid when
+    Parameters :: { WorkFlow  :: workflow() ,
+                    FilterFun :: filter_fun() },
+    NextPid :: pid(),
+    WorkflowPid :: pid().
+
+start({WorkFlow, FilterFun}, NextPid ) ->
     Ref = make_ref(),
-    CounterPid = spawn(sk_feedback_bicounter, start, []),
-    FilterPid = spawn(sk_feedback_filter, start, [FilterFun, Ref, CounterPid, NextPid]),
+    CounterPid = proc_lib:spawn(sk_feedback_bicounter, start, []),
+    FilterPid = proc_lib:spawn(sk_feedback_filter, start, [FilterFun, Ref, CounterPid, NextPid]),
     WorkerPid = sk_utils:start_worker(WorkFlow, FilterPid), 
-    spawn(sk_feedback_receiver, start, [Ref, CounterPid, FilterPid, WorkerPid])
-  end.
+    proc_lib:spawn(sk_feedback_receiver, start, [Ref, CounterPid, FilterPid, WorkerPid]).
+

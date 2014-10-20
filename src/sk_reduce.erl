@@ -19,36 +19,24 @@
 -module(sk_reduce).
 
 -export([
-         make/2
-        ,fold1/2
+         start/2
         ]).
 
 -include("skel.hrl").
 
--spec make(decomp_fun(), reduce_fun()) -> fun((pid()) -> pid()).
+
 %% @doc Readies an instance of the Reduce skeleton. Uses the developer-defined 
 %% decomposition and recomposition functions `Decomp' and `Reduce', 
 %% respectively. Returns an anonymous function waiting for the sink process 
 %% `NextPid'.
-make(Decomp, Reduce) ->
-  fun(NextPid) ->
-    spawn(sk_reduce_decomp, start, [Decomp, Reduce, NextPid])
-  end.
+-spec start( Parameters, NextPid ) -> WorkflowPid when
+    Parameters :: { Reduce :: reduce_fun(),
+                    Decomp :: decomp_fun() },
+    NextPid :: pid(),
+    WorkflowPid :: pid().
 
-% Implemented as a treefold underneath
+start({Reduce, Decomp}, NextPid ) ->
+  io:format("start reduce~n~n"),
+  proc_lib:spawn(sk_reduce_decomp, start, [Decomp, Reduce, NextPid]).
 
--spec fold1(fun((A, A) -> A), [A,...]) -> A when A :: term().
-%% @doc Sequential `reduce' entry-point. Primarily for comparison purposes.
-fold1(_ReduceFun, [L1]) ->
-  L1;
-fold1(ReduceFun, [L1, L2 | List]) ->
-  fold1(ReduceFun, [ReduceFun(L1, L2) | pairs(ReduceFun, List)]).
 
--spec pairs(fun((A, A) -> A), [A]) -> [A] when A :: term().
-%% @doc Second stage to {@link fold1}'s  sequential `reduce'. Recursively 
-%% pairs the first two elements in the list and applies the given function 
-%% `Fun'.
-pairs(Fun, [L1,L2|List]) ->
-  [Fun(L1,L2) | pairs(Fun, List)];
-pairs(_Fun, List) ->
-  List.
