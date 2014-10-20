@@ -23,7 +23,15 @@
 -module(sk_map_partitioner).
 
 -export([
-          start/3
+         start/3,
+         start/4,
+         start/5
+        ]).
+
+%% Privete exports
+-export([
+         loop/4,
+         loop/3
         ]).
 
 -include("skel.hrl").
@@ -47,12 +55,21 @@
 %% @todo Wait, can't this atom be gotten rid of? The types are sufficiently different.
 start(auto, WorkFlow, CombinerPid) ->
   sk_tracer:t(75, self(), {?MODULE, start}, [{combiner, CombinerPid}]),
-  loop(decomp_by(), WorkFlow, CombinerPid, []);
-start(man, WorkerPids, CombinerPid) when is_pid(hd(WorkerPids)) ->
+  proc_lib:spawn( ?MODULE, loop, [decomp_by(), WorkFlow, CombinerPid, []]).
+
+start(man, WorkFlow, NWorkers, CombinerPid) ->
+  WorkerPids = sk_utils:start_workers(NWorkers, WorkFlow, CombinerPid),
   sk_tracer:t(75, self(), {?MODULE, start}, [{combiner, CombinerPid}]),
-  loop(decomp_by(), CombinerPid, WorkerPids).
+  proc_lib:spawn(?MODULE, loop, [decomp_by(), CombinerPid, WorkerPids]).
+
+-spec start( pos_integer(), pos_integer(), workflow(), workflow()) -> pid().
+start(NCPUWorkers, NGPUWorkers, WorkFlowCPU, WorkFlowGPU, CombinerPid) ->
+  sk_tracer:t(75, self(), {?MODULE, start}, [{combiner, CombinerPid}]),
+  WorkerPids = sk_utils:start_workers_hyb(NCPUWorkers, NGPUWorkers, WorkFlowCPU, WorkFlowGPU, CombinerPid),
+  proc_lib:spawn(?MODULE, loop, [man, WorkerPids, CombinerPid]).
 
 -spec loop(data_decomp_fun(), workflow(), pid(), [pid()]) -> 'eos'.
+%% @private
 %% @doc Recursively receives inputs as messages, which are decomposed, and the 
 %% resulting messages sent to individual workers. `loop/4' is used in place of 
 %% {@link loop/3} when the number of workers to be used is automatically 
@@ -62,7 +79,7 @@ loop(DataPartitionerFun, WorkFlow, CombinerPid, WorkerPids) ->
     {data, _, _} = DataMessage ->
       PartitionMessages = DataPartitionerFun(DataMessage),
       WorkerPids1 = start_workers(length(PartitionMessages), WorkFlow, CombinerPid, WorkerPids),
-      Ref = make_ref(),
+      Ref = make_ref(), %% FIXME not sure what for this ref is
       sk_tracer:t(60, self(), {?MODULE, data}, [{ref, Ref}, {input, DataMessage}, {partitions, PartitionMessages}]),
       dispatch(Ref, length(PartitionMessages), PartitionMessages, WorkerPids1),
       loop(DataPartitionerFun, WorkFlow, CombinerPid, WorkerPids1);
