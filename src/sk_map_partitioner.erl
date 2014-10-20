@@ -30,8 +30,8 @@
 
 %% Privete exports
 -export([
-         loop/4,
-         loop/3
+         loop_auto/4,
+         loop/2
         ]).
 
 -include("skel.hrl").
@@ -55,12 +55,12 @@
 %% @todo Wait, can't this atom be gotten rid of? The types are sufficiently different.
 start(auto, WorkFlow, CombinerPid) ->
   sk_tracer:t(75, self(), {?MODULE, start}, [{combiner, CombinerPid}]),
-  proc_lib:spawn( ?MODULE, loop, [decomp_by(), WorkFlow, CombinerPid, []]).
+  proc_lib:spawn( ?MODULE, loop_auto, [decomp_by(), WorkFlow, CombinerPid, []]).
 
 start(man, WorkFlow, NWorkers, CombinerPid) ->
   WorkerPids = sk_utils:start_workers(NWorkers, WorkFlow, CombinerPid),
   sk_tracer:t(75, self(), {?MODULE, start}, [{combiner, CombinerPid}]),
-  proc_lib:spawn(?MODULE, loop, [decomp_by(), CombinerPid, WorkerPids]).
+  proc_lib:spawn(?MODULE, loop, [decomp_by(), WorkerPids]).
 
 -spec start( pos_integer(), pos_integer(), workflow(), workflow()) -> pid().
 start(NCPUWorkers, NGPUWorkers, WorkFlowCPU, WorkFlowGPU, CombinerPid) ->
@@ -68,39 +68,39 @@ start(NCPUWorkers, NGPUWorkers, WorkFlowCPU, WorkFlowGPU, CombinerPid) ->
   WorkerPids = sk_utils:start_workers_hyb(NCPUWorkers, NGPUWorkers, WorkFlowCPU, WorkFlowGPU, CombinerPid),
   proc_lib:spawn(?MODULE, loop, [man, WorkerPids, CombinerPid]).
 
--spec loop(data_decomp_fun(), workflow(), pid(), [pid()]) -> 'eos'.
+-spec loop_auto(data_decomp_fun(), workflow(), pid(), [pid()]) -> 'eos'.
 %% @private
 %% @doc Recursively receives inputs as messages, which are decomposed, and the 
 %% resulting messages sent to individual workers. `loop/4' is used in place of 
 %% {@link loop/3} when the number of workers to be used is automatically 
 %% determined by the total number of partite elements of an input.
-loop(DataPartitionerFun, WorkFlow, CombinerPid, WorkerPids) ->
+loop_auto(DataPartitionerFun, WorkFlow, CombinerPid, WorkerPids) ->
   receive
     {data, _, _} = DataMessage ->
       PartitionMessages = DataPartitionerFun(DataMessage),
-      WorkerPids1 = start_workers(length(PartitionMessages), WorkFlow, CombinerPid, WorkerPids),
+      WorkerPids1 = add_workers(length(PartitionMessages), WorkFlow, CombinerPid, WorkerPids),
       Ref = make_ref(), %% FIXME not sure what for this ref is
       sk_tracer:t(60, self(), {?MODULE, data}, [{ref, Ref}, {input, DataMessage}, {partitions, PartitionMessages}]),
       dispatch(Ref, length(PartitionMessages), PartitionMessages, WorkerPids1),
-      loop(DataPartitionerFun, WorkFlow, CombinerPid, WorkerPids1);
+      loop_auto(DataPartitionerFun, WorkFlow, CombinerPid, WorkerPids1);
     {system, eos} ->
       sk_utils:stop_workers(?MODULE, WorkerPids),
       eos
   end.
 
 
--spec loop(data_decomp_fun(), pid(), [pid()]) -> 'eos'.
+-spec loop(data_decomp_fun(), [pid()]) -> 'eos'.
 %% @doc Recursively receives inputs as messages, which are decomposed, and the 
 %% resulting messages sent to individual workers. `loop/3' is used in place of 
 %% {@link loop/4} when the number of workers is set by the developer.
-loop(DataPartitionerFun, CombinerPid, WorkerPids) ->
+loop(DataPartitionerFun, WorkerPids) ->
   receive
     {data, _, _} = DataMessage ->
       PartitionMessages = DataPartitionerFun(DataMessage),
       Ref = make_ref(),
       sk_tracer:t(60, self(), {?MODULE, data}, [{ref, Ref}, {input, DataMessage}, {partitions, PartitionMessages}]),
       dispatch(Ref, length(PartitionMessages), PartitionMessages, WorkerPids),
-      loop(DataPartitionerFun, CombinerPid, WorkerPids);
+      loop(DataPartitionerFun, WorkerPids);
     {system, eos} ->
       sk_utils:stop_workers(?MODULE, WorkerPids),
       eos
@@ -116,7 +116,7 @@ decomp_by() ->
     [{data, X, Ids} || X <- Value]
   end.
 
--spec start_workers(pos_integer(), workflow(), pid(), [pid()]) -> [pid()].
+-spec add_workers(pos_integer(), workflow(), pid(), [pid()]) -> [pid()].
 %% @doc Used when the number of workers is not set by the developer.
 %% 
 %% Workers are started if the number needed exceeds the number we already 
@@ -125,11 +125,11 @@ decomp_by() ->
 %% includes 'recycled' workers from previous inputs. Both new and old worker 
 %% processes are returned so that they might be used. Worker processes are 
 %% represented as a list of their Pids under `WorkerPids'.
-start_workers(NPartitions, WorkFlow, CombinerPid, WorkerPids) when NPartitions > length(WorkerPids) ->
+add_workers(NPartitions, WorkFlow, CombinerPid, WorkerPids) when NPartitions > length(WorkerPids) ->
   NNewWorkers = NPartitions - length(WorkerPids),
   NewWorkerPids = sk_utils:start_workers(NNewWorkers, WorkFlow, CombinerPid),
   NewWorkerPids ++ WorkerPids;
-start_workers(_NPartitions, _WorkFlow, _CombinerPid, WorkerPids) ->
+add_workers(_NPartitions, _WorkFlow, _CombinerPid, WorkerPids) ->
   WorkerPids.
 
 
