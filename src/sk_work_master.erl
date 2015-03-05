@@ -1,6 +1,6 @@
 -module(sk_work_master).
 
--export([reserve/3,release/1,register/1,remove/1,find/0,loop/2]).
+-export([reserve/3,release/1,release_when_idle/1,register/1,remove/1,find/0,loop/2]).
 
 start() ->
     PID = spawn(?MODULE,loop,[[],[]]),
@@ -66,6 +66,10 @@ reserve(NWorkers,Workflow,CollectorPID) ->
 
 release(Workers) ->
     find() ! {release,Workers}.
+
+release_when_idle(Workers) ->
+    lists:map(fun(W) -> W ! release_when_idle end, Workers),
+    ok.
 
 remove(WorkerPID) ->
     find() ! {remove,WorkerPID}.

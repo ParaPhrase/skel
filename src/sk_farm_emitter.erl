@@ -38,14 +38,13 @@ start(Workers, Pool) ->
 loop([Worker|Rest] = Workers, Pool) ->
   receive
     {data, _, _} = DataMessage ->
-	  io:format("Forwarding data message ~p~n",[DataMessage]),
 	  sk_tracer:t(50, self(), Worker, {?MODULE, data}, [{input, DataMessage}]),
 	  Worker ! DataMessage,
 	  loop(Rest ++ [Worker],Pool);
     {system, eos} ->
 	  if Pool ->
 		  sk_utils:stop_workers(?MODULE, Workers),
-		  sk_work_master:release(Workers);
+		  sk_work_master:release_when_idle(Workers);
 	     true ->
 		  sk_utils:stop_workers(?MODULE, Workers)
 	  end

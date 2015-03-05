@@ -36,7 +36,6 @@ start(NWorkers, NextPid) ->
 loop(NWorkers, NextPid) ->
   receive
     {data, _, _} = DataMessage ->
-	  io:format("Collected data message ~p~n",[DataMessage]),
 	  sk_tracer:t(50, self(), NextPid, {?MODULE, data}, [{input, DataMessage}]),
 	  NextPid ! DataMessage,
 	  loop(NWorkers, NextPid);

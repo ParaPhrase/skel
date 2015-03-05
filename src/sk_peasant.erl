@@ -26,6 +26,9 @@ loop(idle) ->
 	    ok;
 	{'DOWN', MonitorRef, Type, Object, Info} ->
 	    io:format("DOWN: ~p",[{MonitorRef, Type, Object, Info}]),
+	    loop(idle);
+	release_when_idle ->
+	    sk_work_master:find() ! {release,[self()]},
 	    loop(idle)
     end;
 loop({Workflow,collector_to_follow}) ->
@@ -46,12 +49,14 @@ loop({Workflow,SubWorker,Last}) ->
 	    SubWorker ! {system, eos},
 	    ok;
 	{'DOWN', _, _, SubWorker, _} ->
-	    io:format("Worker Down ~p~n",[SubWorker]),
+	    io:format("[~p] Worker Finished ~p~n",[self(),SubWorker]),
 	    loop(idle);
-	Msg ->
-	    io:format("Passing on ~p~n",[Msg]),
-	    SubWorker ! Msg,
-	    loop({Workflow,SubWorker,Msg})
+	{data,_,_} = DataMessage ->
+	    SubWorker ! DataMessage,
+	    loop({Workflow,SubWorker,DataMessage});
+	{system,_} = SystemMessage ->
+	    SubWorker ! SystemMessage,
+	    loop({Workflow,SubWorker,SystemMessage})
     end.
 
 work_team([NumString]) ->
@@ -76,6 +81,7 @@ monitor_work_team(Workers) ->
     timer:sleep(5000),
     lists:map(fun(W) -> W ! {status,self()} end,Workers),
     States = collect_states(Workers,[]),
+    io:format("------ Status ------~n"),
     monitor_work_team(lists:foldl(fun({W,State},Acc) ->  
 					  io:format("~p :: ~p~n",[W,State]),
 					  case State of
