@@ -1,6 +1,6 @@
 -module(sk_peasant).
 
--export([start/0,loop/1,work_team/1]).
+-export([start/0,loop/1,work_team/1,get_states/1]).
 
 start() ->
     PID = spawn(?MODULE,loop,[idle]),
@@ -79,8 +79,7 @@ monitor_work_team([]) ->
     ok;
 monitor_work_team(Workers) ->
     timer:sleep(5000),
-    lists:map(fun(W) -> W ! {status,self()} end,Workers),
-    States = collect_states(Workers,[]),
+    States = get_states(Workers),
     io:format("------ Status ------~n"),
     monitor_work_team(lists:foldl(fun({W,State},Acc) ->  
 					  io:format("~p :: ~p~n",[W,State]),
@@ -94,6 +93,10 @@ monitor_work_team(Workers) ->
 				  end,
 				  [],
 				  States)).
+
+get_states(Workers) ->
+    lists:map(fun(W) -> W ! {status,self()} end,Workers),
+    collect_states(Workers,[]).
 
 collect_states([],States) ->
     States;

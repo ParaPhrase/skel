@@ -48,13 +48,32 @@ loop(Free,Assigned) ->
 	Other ->
 	    io:format("Unexpected message to work master:~n~p~n",[Other]),
 	    loop(Free,Assigned)
+    after 1000 ->
+	    {NewFree,NewAssigned} = cleanup_dead(Free,Assigned),
+	    loop(NewFree,NewAssigned)
     end.
+
+cleanup_dead(Free,Assigned) ->
+    States = sk_peasant:get_states(Free ++ Assigned),
+    Alive = lists:foldl(fun({W,State},Acc) ->
+				case State of
+				    dead ->
+					io:format("Worker ~p appears dead~n",[W]),
+					%% FIXME Should we attempt to re-run the task if it was active??
+					Acc;
+				    _ ->
+					[W | Acc]
+				end
+			end,
+			[],
+			States),
+    {lists:filter(fun(W) -> lists:member(W,Alive) end, Free),
+     lists:filter(fun(W) -> lists:member(W,Alive) end, Assigned)}.
 
 register(WorkerPID) ->
     find() ! {register,WorkerPID}.
 
 reserve(NWorkers,Workflow,CollectorPID) ->
-    io:format("Attempting to reserve ~p workers from ~p~n~p~n~p~n",[NWorkers,find(),Workflow,CollectorPID]),
     find() ! {reserve,NWorkers,Workflow,CollectorPID,self()},
     receive
 	{ok,Workers} ->
