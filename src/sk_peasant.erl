@@ -23,7 +23,10 @@ loop(idle) ->
 	    From ! {status_report,self(),idle},
 	    loop(idle);
 	terminate ->
-	    ok
+	    ok;
+	{'DOWN', MonitorRef, Type, Object, Info} ->
+	    io:format("DOWN: ~p",[{MonitorRef, Type, Object, Info}]),
+	    loop(idle)
     end;
 loop({Workflow,collector_to_follow}) ->
     receive
@@ -42,8 +45,8 @@ loop({Workflow,SubWorker,Last}) ->
 	terminate ->
 	    SubWorker ! {system, eos},
 	    ok;
-	{system, eos} ->
-	    SubWorker ! {system, eos},
+	{'DOWN', _, _, SubWorker, _} ->
+	    io:format("Worker Down ~p~n",[SubWorker]),
 	    loop(idle);
 	Msg ->
 	    io:format("Passing on ~p~n",[Msg]),
