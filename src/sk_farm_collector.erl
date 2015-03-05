@@ -36,9 +36,10 @@ start(NWorkers, NextPid) ->
 loop(NWorkers, NextPid) ->
   receive
     {data, _, _} = DataMessage ->
-      sk_tracer:t(50, self(), NextPid, {?MODULE, data}, [{input, DataMessage}]),
-      NextPid ! DataMessage,
-      loop(NWorkers, NextPid);
+	  io:format("Collected data message ~p~n",[DataMessage]),
+	  sk_tracer:t(50, self(), NextPid, {?MODULE, data}, [{input, DataMessage}]),
+	  NextPid ! DataMessage,
+	  loop(NWorkers, NextPid);
     {system, eos} when NWorkers =< 1 ->
       sk_tracer:t(75, self(), NextPid, {?MODULE, system}, [{msg, eos}, {remaining, 0}]),
       NextPid ! {system, eos},

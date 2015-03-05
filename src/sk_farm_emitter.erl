@@ -16,7 +16,8 @@
 -module(sk_farm_emitter).
 
 -export([
-         start/1
+         start/1,
+	 start/2
         ]).
 
 -include("skel.hrl").
@@ -43,6 +44,7 @@ loop([Worker|Rest] = Workers, Pool) ->
 	  loop(Rest ++ [Worker],Pool);
     {system, eos} ->
 	  if Pool ->
+		  sk_utils:stop_workers(?MODULE, Workers),
 		  sk_work_master:release(Workers);
 	     true ->
 		  sk_utils:stop_workers(?MODULE, Workers)

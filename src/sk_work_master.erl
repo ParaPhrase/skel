@@ -1,6 +1,6 @@
 -module(sk_work_master).
 
--export([reserve/3,release/1,register/1,find/0,loop/2]).
+-export([reserve/3,release/1,register/1,remove/1,find/0,loop/2]).
 
 start() ->
     PID = spawn(?MODULE,loop,[[],[]]),
@@ -37,6 +37,14 @@ loop(Free,Assigned) ->
 	{register,WorkerPID} ->
 	    io:format("Registering new peasant ~p~n",[WorkerPID]),
 	    loop([WorkerPID | Free],Assigned);
+	{remove,WorkerPID} ->
+	    case lists:any(fun(W) -> W == WorkerPID end, Assigned) of
+		true ->
+		    %% FIXME Should we attempt to re-run the task??
+		    loop(lists:filter(fun(W) -> W /= WorkerPID end,Free), lists:filter(fun(W) -> W /= WorkerPID end, Assigned));
+		_ ->
+		    loop(lists:filter(fun(W) -> W /= WorkerPID end,Free), Assigned)
+	    end;
 	Other ->
 	    io:format("Unexpected message to work master:~n~p~n",[Other]),
 	    loop(Free,Assigned)
@@ -58,3 +66,6 @@ reserve(NWorkers,Workflow,CollectorPID) ->
 
 release(Workers) ->
     find() ! {release,Workers}.
+
+remove(WorkerPID) ->
+    find() ! {remove,WorkerPID}.

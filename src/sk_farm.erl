@@ -32,7 +32,7 @@ make({pool,NWorkers}, WorkFlow) ->
   fun(NextPid) ->
     CollectorPid = spawn(sk_farm_collector, start, [NWorkers, NextPid]),
     WorkerPids = sk_work_master:reserve(NWorkers,WorkFlow,CollectorPid),
-    spawn(sk_farm_emitter, start, [WorkerPids])
+    spawn(sk_farm_emitter, start, [WorkerPids,true])
   end;
 %% @doc Initialises a Farm skeleton given the number of workers and their 
 %% inner-workflows, respectively.
