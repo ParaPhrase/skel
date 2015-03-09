@@ -1,12 +1,33 @@
+%%%----------------------------------------------------------------------------
+%%% @author Ramsay Taylor <r.g.taylor@sheffield.ac.uk>
+%%%
+%%% @doc This module contains the work master, which manages the worker pool
+%%%
+%%% The sk_work_master process will run on whichever node is first to call
+%%% sk_work_master:find(). Thereafter, find() will return the PID of that process.
+%%%
+%%% The work master receives register requests from 'peasants' and manintains
+%%% lists of free and assigned peasants. Free peasants can be reserved and released
+%%% with the relevant API calls.
+%%%
+%%% The work master periodically checks the health of peasants and removes 'dead'
+%%% ones from the lists.
+%%%
+%%% @end
+%%%----------------------------------------------------------------------------
 -module(sk_work_master).
 
--export([reserve/3,release/1,release_when_idle/1,register/1,remove/1,find/0,loop/2]).
+-export([reserve/3,release/1,release_when_idle/1,register/1,remove/1,find/0,loop/2,status/0,stop/0]).
 
+-include("skel.hrl").
+
+-spec start() -> pid().
 start() ->
     PID = spawn(?MODULE,loop,[[],[]]),
     yes = global:register_name(sk_work_master,PID),
     PID.
 
+-spec find() -> pid().
 find() ->
     case global:whereis_name(sk_work_master) of
 	undefined ->
@@ -15,6 +36,7 @@ find() ->
 	    PID
     end.
 
+-spec loop(list(pid),list(pid)) -> ok.
 loop(Free,Assigned) ->
     receive
 	{reserve,NWorkers,Workflow,CollectorPID,From} ->
@@ -45,6 +67,14 @@ loop(Free,Assigned) ->
 		_ ->
 		    loop(lists:filter(fun(W) -> W /= WorkerPID end,Free), Assigned)
 	    end;
+	terminate ->
+	    lists:map(fun(W) -> W ! terminate end, Free ++ Assigned),
+	    ok;
+%%	{job_complete,WorkerPID} ->
+%%	    loop(Free,Assigned);
+	{status, From} ->
+	    From ! {sk_work_master_status,length(Free),length(Assigned)},
+	    loop(Free,Assigned);
 	Other ->
 	    io:format("Unexpected message to work master:~n~p~n",[Other]),
 	    loop(Free,Assigned)
@@ -70,9 +100,12 @@ cleanup_dead(Free,Assigned) ->
     {lists:filter(fun(W) -> lists:member(W,Alive) end, Free),
      lists:filter(fun(W) -> lists:member(W,Alive) end, Assigned)}.
 
+-spec register(pid()) -> ok.
 register(WorkerPID) ->
-    find() ! {register,WorkerPID}.
+    find() ! {register,WorkerPID},
+    ok.
 
+-spec reserve(pos_integer(),workflow(),pid()) -> list(pid()).
 reserve(NWorkers,Workflow,CollectorPID) ->
     find() ! {reserve,NWorkers,Workflow,CollectorPID,self()},
     receive
@@ -83,12 +116,30 @@ reserve(NWorkers,Workflow,CollectorPID) ->
 	    reserve(NWorkers,Workflow,CollectorPID)
     end.
 
+-spec release(list(pid())) -> ok.
 release(Workers) ->
-    find() ! {release,Workers}.
+    find() ! {release,Workers},
+    ok.
 
+-spec release_when_idle(list(pid)) -> ok.
 release_when_idle(Workers) ->
     lists:map(fun(W) -> W ! release_when_idle end, Workers),
     ok.
 
+-spec remove(pid()) -> ok.
 remove(WorkerPID) ->
-    find() ! {remove,WorkerPID}.
+    find() ! {remove,WorkerPID},
+    ok.
+
+-spec status() -> {pos_integer(),pos_integer()}.
+status() ->
+    sk_work_master:find() ! {status, self()},
+    receive
+	{sk_work_master_status,FreeN,AssignedN} ->
+	    {FreeN,AssignedN}
+    end.
+
+-spec stop() -> ok.
+stop() ->
+    sk_work_master:find() ! terminate,
+    ok.

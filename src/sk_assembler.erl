@@ -77,6 +77,9 @@ parse({reduce, Reduce, Decomp}) when is_function(Reduce, 2),
                                      is_function(Decomp, 1) ->
   sk_reduce:make(Decomp, Reduce);
 parse({feedback, WorkFlow, Filter}) when is_function(Filter, 1) ->
-  sk_feedback:make(WorkFlow, Filter).
+    sk_feedback:make(WorkFlow, Filter);
+parse({pool,WorkFlow,NWorkers}) ->
+    sk_pool:make(NWorkers,WorkFlow).
+
 
 
