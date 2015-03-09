@@ -138,7 +138,7 @@ monitor_work_team(Workers) ->
 					  end
 				  end,
 				  [],
-				  States)).
+				  lists:sort(States))).
 
 -spec get_states(list(pid())) -> list({pid(),any()}).
 get_states(Workers) ->
