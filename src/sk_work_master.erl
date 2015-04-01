@@ -106,6 +106,9 @@ register(WorkerPID) ->
     ok.
 
 -spec reserve(pos_integer() | {max,pos_integer()},workflow(),pid()) -> list(pid()).
+reserve({max,0},_Workflow,_CollectorPID) ->
+    %% This is dumb, but there might be a use for it somewhere.
+    [];
 reserve({max,NWorkers},Workflow,CollectorPID) ->
     find() ! {reserve,NWorkers,Workflow,CollectorPID,self()},
     receive
