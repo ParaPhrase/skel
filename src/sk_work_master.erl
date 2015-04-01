@@ -40,12 +40,13 @@ find() ->
 loop(Free,Assigned) ->
     receive
 	{reserve,NWorkers,Workflow,CollectorPID,From} ->
-	    if length(Free) >= NWorkers ->
-		    {Workers, NewFree} = lists:split(NWorkers,Free),
+	    {CleanFree,CleanAssigned} = cleanup_dead(Free,Assigned),
+	    if length(CleanFree) >= NWorkers ->
+		    {Workers, NewFree} = lists:split(NWorkers,CleanFree),
 		    lists:map(fun(W) -> W ! {start,Workflow,CollectorPID} end,Workers),
 		    From ! {ok,Workers},
-		    io:format("Reserving ~p workers, now ~p Free, ~p Assigned~n",[length(Workers),length(NewFree), length(Workers) + length(Assigned)]),
-		    loop(NewFree,Assigned ++ Workers);
+		    io:format("Reserving ~p workers, now ~p Free, ~p Assigned~n",[length(Workers),length(NewFree), length(Workers) + length(CleanAssigned)]),
+		    loop(NewFree,CleanAssigned ++ Workers);
 	       true ->
 		    io:format("Requested ~p workers but only ~p available~n",[NWorkers,length(Free)]),
 		    From ! {not_enough_workers,length(Free)},
