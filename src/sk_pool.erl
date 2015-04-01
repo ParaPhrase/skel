@@ -24,7 +24,8 @@ make(NWorkers, WorkFlow) ->
   fun(NextPid) ->
 	  WorkerPids = sk_work_master:reserve(NWorkers,WorkFlow,collector_to_follow),
 	  EmitterPid = spawn(sk_pool_emitter, start, [WorkerPids]),
-	  CollectorPid = spawn(sk_pool_collector, start, [NWorkers, EmitterPid, NextPid]),
+	  %% Use length(WorkerPids) because reserve now supports {max,N} requests, so the numebr of workers could vary
+	  CollectorPid = spawn(sk_pool_collector, start, [length(WorkerPids), EmitterPid, NextPid]),
 	  lists:map(fun(W) -> W ! {set_collector,CollectorPid} end, WorkerPids),
 	  EmitterPid
   end.
