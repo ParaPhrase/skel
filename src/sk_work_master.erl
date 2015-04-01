@@ -112,7 +112,12 @@ reserve({max,NWorkers},Workflow,CollectorPID) ->
 	{ok,Workers} ->
 	    Workers;
 	{not_enough_workers,Avail} ->
-	    reserve(Avail,Workflow,CollectorPID)
+	    if Avail > 0 ->
+		    reserve(Avail,Workflow,CollectorPID);
+	       true ->
+		    timer:sleep(1000),
+		    reserve({max,NWorkers},Workflow,CollectorPID)
+	    end
     end;
 reserve(NWorkers,Workflow,CollectorPID) ->
     find() ! {reserve,NWorkers,Workflow,CollectorPID,self()},
