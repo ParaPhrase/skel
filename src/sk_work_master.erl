@@ -48,7 +48,7 @@ loop(Free,Assigned) ->
 		    loop(NewFree,Assigned ++ Workers);
 	       true ->
 		    io:format("Requested ~p workers but only ~p available~n",[NWorkers,length(Free)]),
-		    From ! not_enough_workers,
+		    From ! {not_enough_workers,length(Free)},
 		    loop(Free,Assigned)
 	    end;
 	{release,Workers} ->
@@ -105,13 +105,21 @@ register(WorkerPID) ->
     find() ! {register,WorkerPID},
     ok.
 
--spec reserve(pos_integer(),workflow(),pid()) -> list(pid()).
+-spec reserve(pos_integer() | {max,pos_integer()},workflow(),pid()) -> list(pid()).
+reserve({max,NWorkers},Workflow,CollectorPID) ->
+    find() ! {reserve,NWorkers,Workflow,CollectorPID,self()},
+    receive
+	{ok,Workers} ->
+	    Workers;
+	{not_enough_workers,Avail} ->
+	    reserve(Avail,Workflow,CollectorPID)
+    end;
 reserve(NWorkers,Workflow,CollectorPID) ->
     find() ! {reserve,NWorkers,Workflow,CollectorPID,self()},
     receive
 	{ok,Workers} ->
 	    Workers;
-	not_enough_workers ->
+	{not_enough_workers,_Avail} ->
 	    timer:sleep(1000),
 	    reserve(NWorkers,Workflow,CollectorPID)
     end.
