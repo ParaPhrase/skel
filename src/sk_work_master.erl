@@ -50,7 +50,7 @@ loop(Free,Assigned) ->
 	       true ->
 		    io:format("Requested ~p workers but only ~p available~n",[NWorkers,length(Free)]),
 		    From ! {not_enough_workers,length(Free)},
-		    loop(Free,Assigned)
+		    loop(CleanFree,CleanAssigned)
 	    end;
 	{release,Workers} ->
 	    lists:map(fun(W) -> W ! stop end,Workers),
