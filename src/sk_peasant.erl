@@ -68,13 +68,6 @@ loop(Workflow,SubWorker,Last,CollectorPID) ->
 	{status,From} ->
 	    From ! {status_report,self(),{working,Workflow,Last}},
 	    loop(Workflow,SubWorker,Last,CollectorPID);
-	terminate ->
-	    SubWorker ! {system, eos},
-	    ok;
-%%	{'DOWN', _, _, SubWorker, _} ->
-%%	    io:format("[~p] Worker Finished ~p~n",[self(),SubWorker]),
-%%	    sk_work_master:find() ! {job_complete,self()},
-%%	    loop(idle);
 	{'EXIT', SubWorker, Info} ->
 	    io:format("[~p] Worker EXIT: ~p",[self(),{SubWorker, Info}]),
 	    sk_work_master:find() ! {worker_error,self(),Info},
