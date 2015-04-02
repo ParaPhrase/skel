@@ -49,7 +49,7 @@ loop(Free,Assigned) ->
 		    loop(NewFree,CleanAssigned ++ Workers);
 	       true ->
 		    io:format("Requested ~p workers but only ~p available~n",[NWorkers,length(Free)]),
-		    From ! {not_enough_workers,length(Free)},
+		    From ! {not_enough_workers,length(CleanFree)},
 		    loop(CleanFree,CleanAssigned)
 	    end;
 	{release,Workers} ->
