@@ -45,20 +45,20 @@ loop(Free,Assigned) ->
 		    {Workers, NewFree} = lists:split(NWorkers,CleanFree),
 		    lists:map(fun(W) -> W ! {start,Workflow,CollectorPID} end,Workers),
 		    From ! {ok,Workers},
-		    io:format("Reserving ~p workers, now ~p Free, ~p Assigned~n",[length(Workers),length(NewFree), length(Workers) + length(CleanAssigned)]),
+		    %%io:format("Reserving ~p workers, now ~p Free, ~p Assigned~n",[length(Workers),length(NewFree), length(Workers) + length(CleanAssigned)]),
 		    loop(NewFree,CleanAssigned ++ Workers);
 	       true ->
-		    io:format("Requested ~p workers but only ~p available~n",[NWorkers,length(Free)]),
+		    %%io:format("Requested ~p workers but only ~p available~n",[NWorkers,length(Free)]),
 		    From ! {not_enough_workers,length(CleanFree)},
 		    loop(CleanFree,CleanAssigned)
 	    end;
 	{release,Workers} ->
 	    lists:map(fun(W) -> W ! stop end,Workers),
 	    NewAssigned = lists:filter(fun(A) -> not lists:any(fun(W) -> A == W end, Workers) end, Assigned),
-	    io:format("Releasing ~p workers, now ~p Free, ~p Assigned~n",[length(Workers),length(Free) + length(Workers), length(NewAssigned)]),
+	    %%io:format("Releasing ~p workers, now ~p Free, ~p Assigned~n",[length(Workers),length(Free) + length(Workers), length(NewAssigned)]),
 	    loop(Free ++ Workers, NewAssigned);
 	{register,WorkerPID} ->
-	    io:format("Registering new peasant ~p~n",[WorkerPID]),
+	    %%io:format("Registering new peasant ~p~n",[WorkerPID]),
 	    loop([WorkerPID | Free],Assigned);
 	{remove,WorkerPID} ->
 	    case lists:any(fun(W) -> W == WorkerPID end, Assigned) of
@@ -119,6 +119,7 @@ reserve({max,NWorkers},Workflow,CollectorPID) ->
 	    if Avail > 0 ->
 		    reserve(Avail,Workflow,CollectorPID);
 	       true ->
+		    io:format("Requested ~p workers, but none available~n",[NWorkers]),
 		    timer:sleep(1000),
 		    reserve({max,NWorkers},Workflow,CollectorPID)
 	    end
@@ -128,7 +129,8 @@ reserve(NWorkers,Workflow,CollectorPID) ->
     receive
 	{ok,Workers} ->
 	    Workers;
-	{not_enough_workers,_Avail} ->
+	{not_enough_workers,Avail} ->
+	    io:format("Requested ~p workers, but only ~p available~n",[NWorkers,Avail]),
 	    timer:sleep(1000),
 	    reserve(NWorkers,Workflow,CollectorPID)
     end.
