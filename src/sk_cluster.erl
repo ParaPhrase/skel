@@ -33,7 +33,10 @@
 -module(sk_cluster).
 
 -export([
-         make/3
+         make/3,
+	 make_hyb/4,
+	 make_hyb/5,
+	 make_hyb/7
         ]).
 
 -include("skel.hrl").
@@ -55,3 +58,97 @@ make(WorkFlow, Decomp, Recomp) ->
     WorkerPid = sk_utils:start_worker(WorkFlow, RecompPid),
     spawn(sk_cluster_decomp, start, [Decomp, WorkerPid])
   end.
+
+ceiling(X) ->
+    T = erlang:trunc(X),
+    case (X - T) of
+        Neg when Neg < 0 -> T;
+        Pos when Pos > 0 -> T + 1;
+        _ -> T
+    end.
+
+
+mark_tasks([], _NCPUWorkers, _NGPUWorkers) ->
+    [];
+mark_tasks(_Tasks, 0, 0) ->
+    [];
+mark_tasks([Task|Tasks], 0, NGPUWorkers) ->
+    [{gpu, Task} | mark_tasks(Tasks, 0, NGPUWorkers-1)];
+mark_tasks([Task|Tasks], NCPUWorkers, NGPUWorkers) ->
+    [{cpu, Task} | mark_tasks(Tasks, NCPUWorkers-1, NGPUWorkers)].
+
+hyb_cluster_decomp(Decomp, NCPUWorkers, NGPUWorkers, Input) ->
+    Tasks = Decomp(Input),
+    mark_tasks(Tasks, NCPUWorkers, NGPUWorkers).
+
+calculate_ratio(TimeRatio, NTasks, NCPUW, NGPUW) ->
+    TasksCPU = lists:seq(0, NTasks),
+    Time = fun(CPUTasks, GPUTasks) ->
+		   max (ceiling(CPUTasks/NCPUW)*TimeRatio, ceiling(GPUTasks/NGPUW))
+	   end,
+    Ratio = lists:foldl(fun(Elem,Acc) -> FooBar = Time(Elem, NTasks-Elem),
+					 if
+					    (FooBar < element(1,Acc)) or (element(1,Acc) == -1) 
+					     -> {FooBar, Elem};
+					    true -> Acc
+					end end,
+			{-1,0}, TasksCPU),
+    {element(2,Ratio), NTasks-element(2,Ratio)}.
+
+calculate_chunk_sizes(NrItems, NrWorkers) ->
+    ChunkSize = NrItems div NrWorkers,
+    Remainder = NrItems rem NrWorkers,
+    ChunkSizes = lists:duplicate(Remainder, {ChunkSize+1}) ++ lists:duplicate(NrWorkers-Remainder, {ChunkSize}),
+    ChunkSizes.
+
+create_task_list([], [], _MakeChunkFun, _Input) ->
+    [];
+create_task_list([CPUChunk|CPUChunks], GPUChunks, MakeChunkFun, Input) ->
+    CPUChunkSize = element(1,CPUChunk),
+    {Work, Rest} = MakeChunkFun(Input, CPUChunkSize),
+    [ {cpu, Work} | create_task_list(CPUChunks, GPUChunks, MakeChunkFun, Rest) ];
+create_task_list([], [GPUChunk|GPUChunks], MakeChunkFun, Input) ->
+    GPUChunkSize = element(1,GPUChunk),
+    {Work, Rest} = MakeChunkFun(Input, GPUChunkSize),
+    [ {gpu, Work} | create_task_list([], GPUChunks, MakeChunkFun, Rest) ].
+
+hyb_cluster_decomp_default(TimeRatio, StructSizeFun, MakeChunkFun, NCPUWorkers, NGPUWorkers, Input) ->
+    NItems = StructSizeFun(Input),
+    {CPUItems, GPUItems} = if
+		(NCPUWorkers>0) and (NGPUWorkers>0) -> calculate_ratio(TimeRatio, NItems, NCPUWorkers, NGPUWorkers);
+		NGPUWorkers == 0 -> {NItems,0};
+		NCPUWorkers == 0 -> {0, NItems}
+	    end,
+    CPUChunkSizes = calculate_chunk_sizes(CPUItems, NCPUWorkers),
+    GPUChunkSizes = calculate_chunk_sizes(GPUItems, NGPUWorkers),
+    [create_task_list(CPUChunkSizes, GPUChunkSizes, MakeChunkFun, Input)].
+
+-spec make_hyb(workflow(), decomp_fun(), recomp_fun(), pos_integer(), pos_integer()) -> fun((pid()) -> pid()).
+make_hyb(Workflow, Decomp, Recomp, NCPUWorkers, NGPUWorkers) ->
+    fun(NextPid) ->
+	    RecompPid = spawn(sk_cluster_recomp, start, [Recomp, NextPid]),
+	    WorkerPid = sk_utils:start_worker_hyb(Workflow, RecompPid, NCPUWorkers, NGPUWorkers),
+	    spawn(sk_cluster_decomp, start, [fun (Input) -> hyb_cluster_decomp(Decomp, NCPUWorkers, NGPUWorkers, Input) end,
+					    WorkerPid])
+    end.
+
+-spec make_hyb(workflow(), float(), fun((any()) -> pos_integer()), fun((any(),pos_integer()) -> pos_integer()),
+	       fun((any())->any()),
+	       pos_integer(), pos_integer()) -> fun((pid()) -> pid()).
+make_hyb(Workflow, TimeRatio, StructSizeFun, MakeChunkFun, RecompFun, NCPUWorkers, NGPUWorkers) ->
+    fun(NextPid) ->
+	    RecompPid = spawn(sk_cluster_recomp, start, [RecompFun, NextPid]),
+	    WorkerPid = sk_utils:start_worker_hyb(Workflow, RecompPid, NCPUWorkers, NGPUWorkers),
+	    spawn(sk_cluster_decomp, start, [fun (Input) -> hyb_cluster_decomp_default(TimeRatio, StructSizeFun, MakeChunkFun, NCPUWorkers, NGPUWorkers, Input) end,
+					    WorkerPid])
+    end.
+    
+-spec make_hyb(workflow(), float(), pos_integer(), pos_integer()) -> fun((pid())->pid()).
+make_hyb(Workflow, TimeRatio, NCPUWorkers, NGPUWorkers) ->
+    fun(NextPid) ->
+	    RecompPid = spawn(sk_cluster_recomp, start, [fun lists:flatten/1, NextPid]),
+	    WorkerPid = sk_utils:start_worker_hyb(Workflow, RecompPid, NCPUWorkers, NGPUWorkers),
+	    spawn(sk_cluster_decomp, start, [fun (Input) -> hyb_cluster_decomp_default(TimeRatio, fun length/1,fun (Data,Pos) -> lists:split(Pos,Data) end, NCPUWorkers, NGPUWorkers, Input) end,
+					    WorkerPid])
+    end.
+    

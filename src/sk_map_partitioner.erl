@@ -23,7 +23,8 @@
 -module(sk_map_partitioner).
 
 -export([
-          start/3
+          start/3,
+	  start_hyb/4
         ]).
 
 -include("skel.hrl").
@@ -51,6 +52,12 @@ start(auto, WorkFlow, CombinerPid) ->
 start(man, WorkerPids, CombinerPid) when is_pid(hd(WorkerPids)) ->
   sk_tracer:t(75, self(), {?MODULE, start}, [{combiner, CombinerPid}]),
   loop(decomp_by(), CombinerPid, WorkerPids).
+
+-spec start_hyb(atom(), [pid()], [pid()], pid()) -> 'eos'.
+start_hyb(man, CPUWorkerPids, GPUWorkerPids, CombinerPid) ->
+  sk_tracer:t(75, self(), {?MODULE, start}, [{combiner, CombinerPid}]),
+  loop_hyb(decomp_by(), CombinerPid, CPUWorkerPids, GPUWorkerPids).
+    
 
 -spec loop(data_decomp_fun(), workflow(), pid(), [pid()]) -> 'eos'.
 %% @doc Recursively receives inputs as messages, which are decomposed, and the 
@@ -89,6 +96,21 @@ loop(DataPartitionerFun, CombinerPid, WorkerPids) ->
       eos
     end.
 
+loop_hyb(DataPartitionerFun, CombinerPid, CPUWorkerPids, GPUWorkerPids) ->
+  receive
+    {data, _, _} = DataMessage ->
+      PartitionMessages = DataPartitionerFun(DataMessage),
+      Ref = make_ref(),
+      sk_tracer:t(60, self(), {?MODULE, data}, [{ref, Ref}, {input, DataMessage}, {partitions, PartitionMessages}]),
+      hyb_dispatch(Ref, length(PartitionMessages), PartitionMessages, CPUWorkerPids, GPUWorkerPids),
+      loop_hyb(DataPartitionerFun, CombinerPid, CPUWorkerPids, GPUWorkerPids);
+    {system, eos} ->
+      sk_utils:stop_workers(?MODULE, CPUWorkerPids),
+      sk_utils:stop_workers(?MODULE, GPUWorkerPids),
+      eos
+    end.
+
+
 
 -spec decomp_by() -> data_decomp_fun().
 %% @doc Provides the decomposition function and means to split a single input 
@@ -124,6 +146,9 @@ start_workers(_NPartitions, _WorkFlow, _CombinerPid, WorkerPids) ->
 dispatch(Ref, NPartitions, PartitionMessages, WorkerPids) ->
   dispatch(Ref, NPartitions, 1, PartitionMessages, WorkerPids).
 
+hyb_dispatch(Ref, NPartitions, PartitionMessages, CPUWorkerPids, GPUWorkerPids) ->
+    hyb_dispatch(Ref, NPartitions, 1, PartitionMessages, CPUWorkerPids, GPUWorkerPids).
+
 
 -spec dispatch(reference(), pos_integer(), pos_integer(), [data_message(),...], [pid()]) -> 'ok'.
 %% @doc Inner-function for {@link dispatch/4}. Recursively sends each message 
@@ -136,3 +161,18 @@ dispatch(Ref, NPartitions, Idx, [PartitionMessage|PartitionMessages], [WorkerPid
   sk_tracer:t(50, self(), WorkerPid, {?MODULE, data}, [{partition, PartitionMessage1}]),
   WorkerPid ! PartitionMessage1,
   dispatch(Ref, NPartitions, Idx+1, PartitionMessages, WorkerPids ++ [WorkerPid]).
+
+hyb_dispatch(_Ref,_NPartitions, _Idx, [], _, _) ->
+  ok;
+hyb_dispatch(Ref, NPartitions, Idx, [{DataTag,{cpu,Msg},Rest}|PartitionMessages], [CPUWorkerPid|CPUWorkerPids], GPUWorkerPids) ->
+  PartitionMessageWithoutTag = {DataTag, Msg, Rest},
+  PartitionMessage1 = sk_data:push({decomp, Ref, Idx, NPartitions}, PartitionMessageWithoutTag),  
+  sk_tracer:t(50, self(), CPUWorkerPid, {?MODULE, data}, [{partition, PartitionMessage1}]),
+  CPUWorkerPid ! PartitionMessage1,
+  hyb_dispatch(Ref, NPartitions, Idx+1, PartitionMessages, CPUWorkerPids ++ [CPUWorkerPid], GPUWorkerPids);
+hyb_dispatch(Ref, NPartitions, Idx, [{DataTag,{gpu,Msg},Rest}|PartitionMessages], CPUWorkerPids, [GPUWorkerPid|GPUWorkerPids]) ->
+  PartitionMessageWithoutTag = {DataTag, Msg, Rest},
+  PartitionMessage1 = sk_data:push({decomp, Ref, Idx, NPartitions}, PartitionMessageWithoutTag),
+  sk_tracer:t(50, self(), GPUWorkerPid, {?MODULE, data}, [{partition, PartitionMessage1}]),
+  GPUWorkerPid ! PartitionMessage1,
+  hyb_dispatch(Ref, NPartitions, Idx+1, PartitionMessages, CPUWorkerPids, GPUWorkerPids ++ [GPUWorkerPid]).

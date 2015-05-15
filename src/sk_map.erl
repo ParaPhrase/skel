@@ -88,7 +88,17 @@ make(WorkFlow, NWorkers) ->
 make_hyb(WorkFlowCPU, WorkFlowGPU, NCPUWorkers, NGPUWorkers) ->
   fun(NextPid) ->
     CombinerPid = spawn(sk_map_combiner, start, [NextPid, NCPUWorkers+NGPUWorkers]),
-    WorkerPids = sk_utils:start_workers_hyb(NCPUWorkers, NGPUWorkers, WorkFlowCPU, WorkFlowGPU, CombinerPid),
-    spawn(sk_map_partitioner, start, [man, WorkerPids, CombinerPid])
+    {CPUWorkerPids, GPUWorkerPids} = sk_utils:start_workers_hyb(NCPUWorkers, NGPUWorkers, WorkFlowCPU, WorkFlowGPU, CombinerPid),
+    spawn(sk_map_partitioner, start_hyb, [man, CPUWorkerPids, GPUWorkerPids, CombinerPid])
   end.
+
+%make_hyb(WorkFlowCPU, WorkFlowGPU) ->
+%  fun(NextPid) ->
+%	  CombinerPid = spawn(sk_map_combiner, start, [NextPid]),
+%	  spawn(sk_map_partitioner, start, [auto, [{seq, fun(X) -> sk_utils:hyb_worker(WorkFlowCPU, WorkFlowGPU, X) end}], 
+%					    CombinerPid])
+%  end.
+
+    
+
 

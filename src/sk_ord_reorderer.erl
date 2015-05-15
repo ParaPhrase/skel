@@ -39,7 +39,7 @@ start(NextPid) ->
 % dict1 is a dictionary of {Identifier, Data Message} key-value pairs
 % Seen is a count of the loop: how many things it has seen.
 
--spec loop(non_neg_integer(), dict(), pid()) -> 'eos'.
+-spec loop(non_neg_integer(), dict:dict(), pid()) -> 'eos'.
 %% @doc Recursively receives and stores messages until they are ready for 
 %% release.
 loop(Seen, Dict, NextPid) ->
@@ -55,13 +55,13 @@ loop(Seen, Dict, NextPid) ->
       eos
   end.
 
--spec store(pos_integer(), data_message(), dict()) -> dict().
+-spec store(pos_integer(), data_message(), dict:dict()) -> dict:dict().
 %% @doc Stores the given `Idx', indicating position, and message `DataMessage' 
 %% in the dictionary `Dict'. Returns the resulting dictionary.
 store(Idx, DataMessage, Dict) ->
   dict:store(Idx, DataMessage, Dict).
 
--spec forward(non_neg_integer(), dict(), pid()) -> {non_neg_integer(), dict()}.
+-spec forward(non_neg_integer(), dict:dict(), pid()) -> {non_neg_integer(), dict:dict()}.
 %% @doc Determines if any messages in the dictionary `Dict' can be released to 
 %% the process `NextPid'. This decision is based upon which messages have 
 %% already been released as indicated by the `Seen' counter. 

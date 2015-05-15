@@ -33,7 +33,7 @@ start(DataFun, NextPid) ->
 % 1st Case: data message. Stores items in a dictionary until they can be reduced (i.e. on every second call, dict1 is emptied).
 % 2nd Case: Occurs when you have an odd-length list as input.
 
--spec loop(dict(), integer(), data_reduce_fun(), pid()) -> eos.
+-spec loop(dict:dict(), integer(), data_reduce_fun(), pid()) -> eos.
 %% @doc The main message receiver loop. Recursively receives messages upon 
 %% which, if said messages carry data, a reduction is attempted using 
 %% `DataFun'. 
@@ -57,13 +57,13 @@ loop(Dict, EOSRecvd, DataFun, NextPid) ->
       loop(Dict, EOSRecvd+1, DataFun, NextPid)
   end.
 
--spec store(reference(), dict(), maybe_data()) -> dict().
+-spec store(reference(), dict:dict(), maybe_data()) -> dict:dict().
 %% @doc Stores the given reference `Ref' and value `Value' in the dictionary 
 %% `Dict'. Returns the resulting dictionary.
 store(Ref, Dict, Value) ->
   dict:append(Ref, Value, Dict).
 
--spec maybe_reduce(reference(), integer(), pid(), data_reduce_fun(), dict()) -> dict().
+-spec maybe_reduce(reference(), integer(), pid(), data_reduce_fun(), dict:dict()) -> dict:dict().
 %% @doc Attempts to find the reference `Ref' in the dictionary `Dict'. If 
 %% found, a reduction shall be attempted. Otherwise, the dictionary is simply 
 %% returned.
@@ -79,7 +79,7 @@ maybe_reduce(Ref, ReduceCount, NextPid, DataFun, Dict) ->
 % Case 4: Reference has two data message entries, which are then reduced.
 % Deletes the reference from the dictionary, result is returned.
 
--spec reduce(reference(), integer(), pid(), [maybe_data(),...], data_reduce_fun(), dict()) -> dict().
+-spec reduce(reference(), integer(), pid(), [maybe_data(),...], data_reduce_fun(), dict:dict()) -> dict:dict().
 %% @doc The reduction function. Given a list of length two containing specific 
 %% data messages retreived from `Dict', all messages are reduced to a single 
 %% message. Returns the (now-erased) dictionary.

@@ -50,7 +50,7 @@ start(NextPid, NWorkers) ->
   loop(man, NWorkers, 0, dict:new(), recomp_with(), NextPid).
 
 
--spec loop(atom(), non_neg_integer(), non_neg_integer(), dict(), data_recomp_fun(), pid()) -> 'eos'.
+-spec loop(atom(), non_neg_integer(), non_neg_integer(), dict:dict(), data_recomp_fun(), pid()) -> 'eos'.
 %% @doc Recursively receives and stores messages until groups of said messages 
 %% may be recomposed and sent. Serves to stop all processes once all inputs 
 %% have been processed.
@@ -109,7 +109,7 @@ new_total_workers(TotWorkers, _NPartitions) ->
   TotWorkers.
 
 
--spec store(reference(), pos_integer(), pos_integer(), data_message(), dict()) -> dict().
+-spec store(reference(), pos_integer(), pos_integer(), data_message(), dict:dict()) -> dict:dict().
 %% @doc Stores in a dictionary the total number of partitions, `NPartitions', 
 %% expected; all messages heretofore received; and the number said received 
 %% messages, for the original input under the reference given by `Ref'. The 
@@ -120,7 +120,7 @@ store(Ref, Idx, NPartitions, PartitionMessage, Dict) ->
   dict:update_counter({Ref, received}, 1, Dict2).
 
 
--spec combine_and_forward(reference(), dict(), data_recomp_fun(), pid()) -> dict().
+-spec combine_and_forward(reference(), dict:dict(), data_recomp_fun(), pid()) -> dict:dict().
 %% @doc Attempts to find the reference as given by `Ref' in the specified 
 %% dictionary.
 %% 
@@ -134,7 +134,7 @@ combine_and_forward(Ref, Dict, DataCombinerFun, NextPid) ->
   end.
 
 
--spec combine_and_forward(reference(), dict(), pos_integer(), data_recomp_fun(), pid()) -> dict().
+-spec combine_and_forward(reference(), dict:dict(), pos_integer(), data_recomp_fun(), pid()) -> dict:dict().
 %% @doc Inner-function for {@link combine_and_forward/4} that attempts to 
 %% restore a decomposed list from parts in a dictionary `Dict', whose 
 %% reference is given by `Ref'.
@@ -157,7 +157,7 @@ combine_and_forward(Ref, Dict, NPartitions, DataCombinerFun, NextPid) ->
   end.
 
 
--spec fetch_partitions(reference(), non_neg_integer(), dict(), [any()]) -> [any()].
+-spec fetch_partitions(reference(), non_neg_integer(), dict:dict(), [any()]) -> [any()].
 %% @doc Returns a list of all data messages in the given dictionary, whose 
 %% reference is `Ref'.
 fetch_partitions(_Ref, 0, _Dict, Acc) ->
@@ -167,7 +167,7 @@ fetch_partitions(Ref, NPartitions, Dict, Acc) ->
   fetch_partitions(Ref, NPartitions-1, Dict, [Piece|Acc]).
 
 
--spec purge_partitions(reference(), non_neg_integer(), dict()) -> dict().
+-spec purge_partitions(reference(), non_neg_integer(), dict:dict()) -> dict:dict().
 %% @doc Recursively removes all entries with `Ref' as their reference in the 
 %% given dictionary.
 purge_partitions(Ref, 0, Dict) ->
