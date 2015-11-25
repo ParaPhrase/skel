@@ -10,8 +10,11 @@
 -module(skel).
 
 -export([
-         run/2
-        ,do/2
+         run/2,
+         do/2,
+         farm/2,
+         farm/3,
+         pipe/2
         ]).
 
 -include("skel.hrl").
@@ -49,3 +52,16 @@ do(WorkFlow, Input) ->
         Results
   end.
 
+-spec farm(fun(), list()) -> list().
+farm(Fun, Input) ->
+    skel:do([{farm, [{seq, Fun}], erlang:system_info(schedulers_online)}], Input).
+
+-spec farm(fun(), non_neg_integer(), list()) -> list().
+farm(Fun, N, Input) ->
+    skel:do([{farm, [{seq, Fun}], N}], Input).
+
+-spec pipe([fun()], list()) -> list().
+pipe(WorkflowFuns, Input) ->
+    skel:do(lists:map(fun(Fun) ->
+                              {seq, Fun}
+                      end, WorkflowFuns), Input).
