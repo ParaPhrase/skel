@@ -19,7 +19,7 @@
 
 -include("skel.hrl").
 
--type pid_pools() :: dict().
+-type pid_pools() :: dict:dict().
 
 -spec start(decomp_fun(), reduce_fun(), pid()) -> eos.
 %% @doc Starts the reduce process. Takes the developer-defined reduction and 

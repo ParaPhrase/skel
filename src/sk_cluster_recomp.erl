@@ -41,7 +41,7 @@ start(Recomp, NextPid) ->
   DataRecompFun = sk_data:recomp_with(Recomp),
   loop(dict:new(), DataRecompFun, NextPid).
 
--spec loop(dict(), data_recomp_fun(), pid()) -> 'eos'.
+-spec loop(dict:dict(), data_recomp_fun(), pid()) -> 'eos'.
 %% @doc Worker function for {@link start/2}; recursively receives and combines 
 %% messages using the recomposition function under `DataRecompFun'. Once all 
 %% partite elements for each original input have been received and merged, the 
@@ -59,7 +59,7 @@ loop(Dict, DataRecompFun, NextPid) ->
       eos
   end.
 
--spec store(reference(), pos_integer(), pos_integer(), data_message(), dict()) -> dict().
+-spec store(reference(), pos_integer(), pos_integer(), data_message(), dict:dict()) -> dict:dict().
 %% @doc Facilitates the storing of all partite and semi-combined messages, for each input. 
 %% 
 %% The total number of partite elements expected, the partite element data 
@@ -71,7 +71,7 @@ store(Ref, Idx, NPartitions, PartitionMessage, Dict) ->
   Dict2 = dict:store({Ref, Idx}, PartitionMessage, Dict1),
   dict:update_counter({Ref, received}, 1, Dict2).
 
--spec combine_and_forward(reference(), dict(), data_recomp_fun(), pid()) -> dict().
+-spec combine_and_forward(reference(), dict:dict(), data_recomp_fun(), pid()) -> dict:dict().
 %% @doc Attempts to find the grouping reference under `Ref' in the given 
 %% dictionary. If that reference is found, all message parts are combined 
 %% using the recomposition function given under `DataCombinerFun'.
@@ -81,7 +81,7 @@ combine_and_forward(Ref, Dict, DataCombinerFun, NextPid) ->
     {ok, NPartitions} -> combine_and_forward(Ref, Dict, NPartitions, DataCombinerFun, NextPid)
   end.
 
--spec combine_and_forward(reference(), dict(), pos_integer(), data_recomp_fun(), pid()) -> dict().
+-spec combine_and_forward(reference(), dict:dict(), pos_integer(), data_recomp_fun(), pid()) -> dict:dict().
 %% @doc Worker function for {@link combine_and_forward/4}; attempts to 
 %% recompose a partite elements for a given original input, as indicated by 
 %% `Ref'. Should all partite elements be stored in the dictionary, they are 
@@ -101,7 +101,7 @@ combine_and_forward(Ref, Dict, NPartitions, DataCombinerFun, NextPid) ->
       Dict
   end.
 
--spec fetch_partitions(reference(), non_neg_integer(), dict(), [any()]) -> [any()].
+-spec fetch_partitions(reference(), non_neg_integer(), dict:dict(), [any()]) -> [any()].
 %% @doc Retrieves and returns a list of all entries with the same reference in 
 %% the specified dictionary.
 fetch_partitions(_Ref, 0, _Dict, Acc) ->
@@ -110,7 +110,7 @@ fetch_partitions(Ref, NPartitions, Dict, Acc) ->
   {ok, Piece} = dict:find({Ref, NPartitions}, Dict),
   fetch_partitions(Ref, NPartitions-1, Dict, [Piece|Acc]).
 
--spec purge_partitions(reference(), non_neg_integer(), dict()) -> dict().
+-spec purge_partitions(reference(), non_neg_integer(), dict:dict()) -> dict:dict().
 %% @doc Recursively removes all entries with the same reference in a given 
 %% dictionary. 
 purge_partitions(Ref, 0, Dict) ->
