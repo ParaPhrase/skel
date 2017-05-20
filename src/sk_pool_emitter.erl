@@ -25,10 +25,10 @@ loop(Idle,Busy,Work) ->
 	{data, _, _} = DataMessage ->
 	    %% Clear up any workers that have died whilst waiting (usually killed by someone else)
 	    States = sk_peasant:get_states(Idle),
-	    TrueIdle = lists:foldl(fun({W,S},acc) ->
+	    TrueIdle = lists:foldl(fun({W,S},Acc) ->
 					   case S of
-					       dead -> acc;
-					       _ -> acc ++ [W]
+					       dead -> Acc;
+					       _ -> Acc ++ [W]
 					   end
 				   end, [], States),
 	    case TrueIdle of
