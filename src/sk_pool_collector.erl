@@ -1,54 +1,45 @@
 %%%----------------------------------------------------------------------------
-%%% @author Sam Elliott <ashe@st-andrews.ac.uk>
-%%% @copyright 2012 University of St Andrews (See LICENCE)
-%%% @headerfile "skel.hrl"
+%%% @author Ramsay Taylor <r.g.taylor@sheffield.ac.uk>
 %%%
-%%% @doc This module contains the collector logic of a Farm skeleton.
+%%% @doc This module contains the collector for the pool skeleton.
 %%%
-%%% A task farm has the most basic kind of stream parallelism - inputs are
-%%% sent to one of `n' replicas of the inner skeleton for processing.
-%%%
-%%% The collector takes inputs off the inner-skeletons' output streams, sending
-%%% them out on the farm skeleton's output stream. It does not preserve 
-%%% ordering.
+%%% 
 %%%
 %%% @end
 %%%----------------------------------------------------------------------------
--module(sk_farm_collector).
+-module(sk_pool_collector).
 
 -export([
-         start/2
+         start/3
         ]).
 
 -include("skel.hrl").
 
--spec start(pos_integer(), pid()) -> 'eos'.
+-spec start(pos_integer(), pid(), pid()) -> 'eos'.
 %% @doc Initialises the collector; forwards any and all output from the inner-
 %% workflow to the sink process at `NextPid'.
-start(NWorkers, NextPid) ->
+start(NWorkers, EmitterPid, NextPid) ->
   sk_tracer:t(75, self(), {?MODULE, start}, [{num_workers, NWorkers}, {next_pid, NextPid}]),
-  loop(NWorkers, NextPid).
+  loop(NWorkers, EmitterPid, NextPid).
 
--spec loop(pos_integer(), pid()) -> 'eos'.
+-spec loop(pos_integer(), pid(), pid()) -> 'eos'.
 %% @doc Worker-function for {@link start/2}. Recursively receives, and 
 %% forwards, any output messages from the inner-workflow. Halts when the `eos' 
 %% system message is received, and only one active worker process remains.
-loop(NWorkers, NextPid) ->
+loop(NWorkers, EmitterPid, NextPid) ->
   receive
-    {data, {complete,_Pid,V}, Other}  ->
-	  %% Filter pool completion messages if we are running pool workers in a standard farm
-	  self() ! {data,V,Other},
-	  loop(NWorkers, NextPid);	  
-    {data, _, _} = DataMessage ->
+    {data, {complete,WPID,Value}, Extra} ->
+	  DataMessage = {data,Value,Extra},
 	  sk_tracer:t(50, self(), NextPid, {?MODULE, data}, [{input, DataMessage}]),
 	  NextPid ! DataMessage,
-	  loop(NWorkers, NextPid);
+	  EmitterPid ! {complete,WPID},
+	  loop(NWorkers, EmitterPid, NextPid);
     {system, eos} when NWorkers =< 1 ->
       sk_tracer:t(75, self(), NextPid, {?MODULE, system}, [{msg, eos}, {remaining, 0}]),
       NextPid ! {system, eos},
       eos;
     {system, eos} ->
       sk_tracer:t(85, self(), {?MODULE, system}, [{msg, eos}, {remaining, NWorkers-1}]),
-      loop(NWorkers-1, NextPid)
+      loop(NWorkers-1, EmitterPid, NextPid)
   end.
 
