@@ -3,7 +3,7 @@
 all: compile
 
 clean:
-	@./rebar clean
+	@rebar3 clean
 	@rm -f doc/skel.aux doc/skel.bbl doc/skel.blg doc/skel.fdb_latexmk doc/skel.fls
 	@rm -f doc/skel.out doc/skel.synctex.gz doc/skel.pdf doc/skel.log
 	@rm -f ./.skel.plt ./.otp.plt skel.tar.gz
@@ -12,22 +12,22 @@ clean:
 	@rm -f tutorial/bin/*.html tutorial/bin/*.png
 
 compile: src/*.erl
-	@./rebar compile
+	@rebar3 compile
 
 console: compile
 	@exec erl -args_file ./priv/default.args
 
 examples: compile
 	@echo "==> skel (examples)"
-	@erlc +debug_info -I include -o ebin examples/*.erl
+	@erlc +debug_info -I include -o _build/default/lib/skel/ebin examples/*.erl
 
 typecheck: compile .skel.plt
 	@echo "==> skel (typecheck)"
-	@dialyzer --no_check_plt --plt ./.skel.plt -c ebin -Wrace_conditions
+	@dialyzer --no_check_plt --plt ./.skel.plt -c _build/default/lib/skel/ebin -Wrace_conditions
 
 typer: compile .skel.plt
 	@echo "==> skel (typer)"
-	@typer --plt ./.skel.plt --show -I include -pa ebin -r src
+	@typer --plt ./.skel.plt --show -I include -pa _build/default/lib/skel/ebin -r src
 
 pdf: doc/skel.pdf
 	@echo "==> skel (pdf)"
@@ -49,7 +49,7 @@ skel.tar.gz: compile
 
 .skel.plt: .otp.plt compile
 	@echo "==> skel (plt)"
-	@dialyzer --add_to_plt --plt ./.otp.plt --output_plt ./.skel.plt -c ebin
+	@dialyzer --add_to_plt --plt ./.otp.plt --output_plt ./.skel.plt -c _build/default/lib/skel/ebin
 
 docs: compile
 	@rm -f doc/*.html doc/*.css doc/edoc-info doc/erlang.png
