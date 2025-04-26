@@ -16,7 +16,8 @@
 -module(sk_farm_emitter).
 
 -export([
-         start/1
+         start/1,
+	 start/2
         ]).
 
 -include("skel.hrl").
@@ -25,18 +26,26 @@
 %% @doc Initialises the emitter. Sends input as messages to the list of 
 %% processes given by `Workers'.
 start(Workers) ->
-  sk_tracer:t(75, self(), {?MODULE, start}, [{workers, Workers}]),
-  loop(Workers).
+    start(Workers,false).
 
--spec loop([pid(),...]) -> 'eos'.
+start(Workers, Pool) ->
+  sk_tracer:t(75, self(), {?MODULE, start}, [{workers, Workers}]),
+  loop(Workers, Pool).
+
+-spec loop([pid(),...], boolean()) -> 'eos'.
 %% @doc Inner-function to {@link start/1}; recursively captures input, sending %% that input onto the next worker in the list. Ceases only when the halt 
 %% command is received.
-loop([Worker|Rest] = Workers) ->
+loop([Worker|Rest] = Workers, Pool) ->
   receive
     {data, _, _} = DataMessage ->
-      sk_tracer:t(50, self(), Worker, {?MODULE, data}, [{input, DataMessage}]),
-      Worker ! DataMessage,
-      loop(Rest ++ [Worker]);
+	  sk_tracer:t(50, self(), Worker, {?MODULE, data}, [{input, DataMessage}]),
+	  Worker ! DataMessage,
+	  loop(Rest ++ [Worker],Pool);
     {system, eos} ->
-      sk_utils:stop_workers(?MODULE, Workers)
+	  if Pool ->
+		  sk_utils:stop_workers(?MODULE, Workers),
+		  sk_work_master:release_when_idle(Workers);
+	     true ->
+		  sk_utils:stop_workers(?MODULE, Workers)
+	  end
   end.

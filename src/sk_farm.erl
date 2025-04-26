@@ -1,5 +1,6 @@
 %%%----------------------------------------------------------------------------
 %%% @author Sam Elliott <ashe@st-andrews.ac.uk>
+%%% @author Ramsay Taylor <r.g.taylor@dcs.shef.ac.uk>
 %%% @copyright 2012 University of St Andrews (See LICENCE)
 %%% @headerfile "skel.hrl"
 %%%
@@ -27,7 +28,13 @@
 
 -include("skel.hrl").
 
--spec make(pos_integer(), workflow()) -> maker_fun().
+-spec make((pos_integer()|{pool,pos_integer()}), workflow()) -> maker_fun().
+make({pool,NWorkers}, WorkFlow) ->
+  fun(NextPid) ->
+	  CollectorPid = spawn(sk_farm_collector, start, [NWorkers, NextPid]),
+	  WorkerPids = sk_work_master:reserve(NWorkers,WorkFlow,CollectorPid),
+	  spawn(sk_farm_emitter, start, [WorkerPids,true])
+  end;
 %% @doc Initialises a Farm skeleton given the number of workers and their 
 %% inner-workflows, respectively.
 make(NWorkers, WorkFlow) ->
